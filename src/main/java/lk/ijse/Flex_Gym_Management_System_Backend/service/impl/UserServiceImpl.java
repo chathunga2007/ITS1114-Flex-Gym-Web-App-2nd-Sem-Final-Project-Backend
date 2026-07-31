@@ -1,5 +1,6 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
+import jakarta.transaction.Transactional;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.MemberDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.UserDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
