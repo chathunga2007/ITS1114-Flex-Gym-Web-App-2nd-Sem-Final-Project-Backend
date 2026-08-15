@@ -73,24 +73,32 @@ public class TrainerServiceImpl implements TrainerService {
 
         Optional<Trainer> optionalTrainer = trainerRepository.findById(id);
 
-        if (optionalTrainer.isPresent()) {
-            Trainer tr = optionalTrainer.get();
-            return new TrainerDTO(
-                    tr.getTrainerId(),
-                    tr.getTrainerName(),
-                    tr.getSpecialization(),
-                    tr.getPhoneNumber(),
-                    tr.getEmail(),
-                    tr.getStatus()
-            );
+        if (optionalTrainer.isEmpty()) {
+            System.out.println("Trainer not found with ID: " + id);
+            return null;
         }
-        return null;
+
+        Trainer tr = optionalTrainer.get();
+
+        if (tr.getStatus() == TrainerStatus.DELETED) {
+            System.out.println("Trainer not found with ID: " + id);
+            return null;
+        }
+
+        return new TrainerDTO(
+                tr.getTrainerId(),
+                tr.getTrainerName(),
+                tr.getSpecialization(),
+                tr.getPhoneNumber(),
+                tr.getEmail(),
+                tr.getStatus()
+        );
     }
 
     @Override
     public List<TrainerDTO> getAllTrainers() {
-        log.info("Execute Get All Trainers");
-        List<Trainer> trainerList = trainerRepository.findAll();
+        log.info("Execute Get All Active Trainers");
+        List<Trainer> trainerList = trainerRepository.findAllByStatus(TrainerStatus.ACTIVE);
         List<TrainerDTO> dtoList = new ArrayList<>();
 
         for (Trainer tr : trainerList) {
