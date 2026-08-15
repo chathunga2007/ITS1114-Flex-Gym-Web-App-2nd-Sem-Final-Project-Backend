@@ -83,7 +83,23 @@ public class MembershipServiceImpl implements MembershipService {
         Membership savedMembership = membershipRepository.save(membership);
         log.info("Membership saved successfully!");
 
-        return convertToDTO(savedMembership);
+        MembershipDTO responseDTO = new MembershipDTO();
+        responseDTO.setMembershipId(savedMembership.getMembershipId());
+        responseDTO.setStartDate(savedMembership.getStartDate());
+        responseDTO.setEndDate(savedMembership.getEndDate());
+        responseDTO.setMembershipStatus(savedMembership.getMembershipStatus());
+
+        if (savedMembership.getMember() != null) {
+            responseDTO.setMemberId(savedMembership.getMember().getMemberId());
+            responseDTO.setMemberName(savedMembership.getMember().getMemberFullName());
+        }
+
+        if (savedMembership.getGymPackage() != null) {
+            responseDTO.setPackageId(savedMembership.getGymPackage().getPackageId());
+            responseDTO.setPackageName(savedMembership.getGymPackage().getPackageName());
+        }
+
+        return responseDTO;
     }
 
     @Override
@@ -129,7 +145,23 @@ public class MembershipServiceImpl implements MembershipService {
         Membership updatedMembership = membershipRepository.save(membership);
         log.info("Membership updated successfully!");
 
-        return convertToDTO(updatedMembership);
+        MembershipDTO responseDTO = new MembershipDTO();
+        responseDTO.setMembershipId(updatedMembership.getMembershipId());
+        responseDTO.setStartDate(updatedMembership.getStartDate());
+        responseDTO.setEndDate(updatedMembership.getEndDate());
+        responseDTO.setMembershipStatus(updatedMembership.getMembershipStatus());
+
+        if (updatedMembership.getMember() != null) {
+            responseDTO.setMemberId(updatedMembership.getMember().getMemberId());
+            responseDTO.setMemberName(updatedMembership.getMember().getMemberFullName());
+        }
+
+        if (updatedMembership.getGymPackage() != null) {
+            responseDTO.setPackageId(updatedMembership.getGymPackage().getPackageId());
+            responseDTO.setPackageName(updatedMembership.getGymPackage().getPackageName());
+        }
+
+        return responseDTO;
     }
 
     @Override
@@ -151,7 +183,23 @@ public class MembershipServiceImpl implements MembershipService {
             throw new CustomException(404, "Membership not found with ID: " + id);
         }
 
-        return convertToDTO(membership);
+        MembershipDTO responseDTO = new MembershipDTO();
+        responseDTO.setMembershipId(membership.getMembershipId());
+        responseDTO.setStartDate(membership.getStartDate());
+        responseDTO.setEndDate(membership.getEndDate());
+        responseDTO.setMembershipStatus(membership.getMembershipStatus());
+
+        if (membership.getMember() != null) {
+            responseDTO.setMemberId(membership.getMember().getMemberId());
+            responseDTO.setMemberName(membership.getMember().getMemberFullName());
+        }
+
+        if (membership.getGymPackage() != null) {
+            responseDTO.setPackageId(membership.getGymPackage().getPackageId());
+            responseDTO.setPackageName(membership.getGymPackage().getPackageName());
+        }
+
+        return responseDTO;
     }
 
     @Override
@@ -170,7 +218,22 @@ public class MembershipServiceImpl implements MembershipService {
         List<MembershipDTO> dtoList = new ArrayList<>();
 
         for (Membership membership : membershipList) {
-            dtoList.add(convertToDTO(membership));
+            MembershipDTO responseDTO = new MembershipDTO();
+            responseDTO.setMembershipId(membership.getMembershipId());
+            responseDTO.setStartDate(membership.getStartDate());
+            responseDTO.setEndDate(membership.getEndDate());
+            responseDTO.setMembershipStatus(membership.getMembershipStatus());
+
+            if (membership.getMember() != null) {
+                responseDTO.setMemberId(membership.getMember().getMemberId());
+                responseDTO.setMemberName(membership.getMember().getMemberFullName());
+            }
+
+            if (membership.getGymPackage() != null) {
+                responseDTO.setPackageId(membership.getGymPackage().getPackageId());
+                responseDTO.setPackageName(membership.getGymPackage().getPackageName());
+            }
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -182,7 +245,22 @@ public class MembershipServiceImpl implements MembershipService {
         List<MembershipDTO> dtoList = new ArrayList<>();
 
         for (Membership membership : membershipList) {
-            dtoList.add(convertToDTO(membership));
+            MembershipDTO responseDTO = new MembershipDTO();
+            responseDTO.setMembershipId(membership.getMembershipId());
+            responseDTO.setStartDate(membership.getStartDate());
+            responseDTO.setEndDate(membership.getEndDate());
+            responseDTO.setMembershipStatus(membership.getMembershipStatus());
+
+            if (membership.getMember() != null) {
+                responseDTO.setMemberId(membership.getMember().getMemberId());
+                responseDTO.setMemberName(membership.getMember().getMemberFullName());
+            }
+
+            if (membership.getGymPackage() != null) {
+                responseDTO.setPackageId(membership.getGymPackage().getPackageId());
+                responseDTO.setPackageName(membership.getGymPackage().getPackageName());
+            }
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -211,25 +289,5 @@ public class MembershipServiceImpl implements MembershipService {
 
         log.info("Membership status changed to DELETED successfully!");
         return "Membership deleted successfully!";
-    }
-
-    private MembershipDTO convertToDTO(Membership membership) {
-        MembershipDTO dto = new MembershipDTO();
-        dto.setMembershipId(membership.getMembershipId());
-        dto.setStartDate(membership.getStartDate());
-        dto.setEndDate(membership.getEndDate());
-        dto.setMembershipStatus(membership.getMembershipStatus());
-
-        if (membership.getMember() != null) {
-            dto.setMemberId(membership.getMember().getMemberId());
-            dto.setMemberName(membership.getMember().getMemberFullName());
-        }
-
-        if (membership.getGymPackage() != null) {
-            dto.setPackageId(membership.getGymPackage().getPackageId());
-            dto.setPackageName(membership.getGymPackage().getPackageName());
-        }
-
-        return dto;
     }
 }
