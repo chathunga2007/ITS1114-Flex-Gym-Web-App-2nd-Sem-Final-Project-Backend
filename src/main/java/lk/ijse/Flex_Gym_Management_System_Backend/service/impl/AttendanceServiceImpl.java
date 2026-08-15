@@ -59,7 +59,14 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         if (!existingLogs.isEmpty()) {
             Attendance existing = existingLogs.get(0);
-            return convertToDTO(existing, "Attendance already marked for today!");
+            AttendanceDTO responseDTO = new AttendanceDTO();
+            responseDTO.setAttendanceId(existing.getAttendanceId());
+            responseDTO.setMemberId(existing.getMember().getMemberId());
+            responseDTO.setMemberFullName(existing.getMember().getMemberFullName());
+            responseDTO.setCheckInTime(existing.getCheckInTime());
+            responseDTO.setAttendanceStatus(existing.getAttendanceStatus());
+            responseDTO.setMessage("Attendance already marked for today!");
+            return responseDTO;
         }
 
         Attendance attendance = new Attendance();
@@ -70,7 +77,14 @@ public class AttendanceServiceImpl implements AttendanceService {
         Attendance savedAttendance = attendanceRepository.save(attendance);
         log.info("Attendance marked successfully!");
 
-        return convertToDTO(savedAttendance, "Attendance marked successfully! Welcome " + member.getMemberFullName());
+        AttendanceDTO responseDTO = new AttendanceDTO();
+        responseDTO.setAttendanceId(savedAttendance.getAttendanceId());
+        responseDTO.setMemberId(savedAttendance.getMember().getMemberId());
+        responseDTO.setMemberFullName(savedAttendance.getMember().getMemberFullName());
+        responseDTO.setCheckInTime(savedAttendance.getCheckInTime());
+        responseDTO.setAttendanceStatus(savedAttendance.getAttendanceStatus());
+        responseDTO.setMessage("Attendance marked successfully! Welcome " + member.getMemberFullName());
+        return responseDTO;
     }
 
     @Override
@@ -80,7 +94,14 @@ public class AttendanceServiceImpl implements AttendanceService {
         List<AttendanceDTO> dtoList = new ArrayList<>();
 
         for (Attendance attendance : attendanceList) {
-            dtoList.add(convertToDTO(attendance, "Success"));
+            AttendanceDTO responseDTO = new AttendanceDTO();
+            responseDTO.setAttendanceId(attendance.getAttendanceId());
+            responseDTO.setMemberId(attendance.getMember().getMemberId());
+            responseDTO.setMemberFullName(attendance.getMember().getMemberFullName());
+            responseDTO.setCheckInTime(attendance.getCheckInTime());
+            responseDTO.setAttendanceStatus(attendance.getAttendanceStatus());
+            responseDTO.setMessage("Success");
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -99,7 +120,14 @@ public class AttendanceServiceImpl implements AttendanceService {
         List<AttendanceDTO> dtoList = new ArrayList<>();
 
         for (Attendance attendance : attendanceList) {
-            dtoList.add(convertToDTO(attendance, "Success"));
+            AttendanceDTO responseDTO = new AttendanceDTO();
+            responseDTO.setAttendanceId(attendance.getAttendanceId());
+            responseDTO.setMemberId(attendance.getMember().getMemberId());
+            responseDTO.setMemberFullName(attendance.getMember().getMemberFullName());
+            responseDTO.setCheckInTime(attendance.getCheckInTime());
+            responseDTO.setAttendanceStatus(attendance.getAttendanceStatus());
+            responseDTO.setMessage("Success");
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -126,7 +154,14 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         List<AttendanceDTO> dtoList = new ArrayList<>();
         for (Attendance attendance : monthlyLogs) {
-            dtoList.add(convertToDTO(attendance, "Success"));
+            AttendanceDTO responseDTO = new AttendanceDTO();
+            responseDTO.setAttendanceId(attendance.getAttendanceId());
+            responseDTO.setMemberId(attendance.getMember().getMemberId());
+            responseDTO.setMemberFullName(attendance.getMember().getMemberFullName());
+            responseDTO.setCheckInTime(attendance.getCheckInTime());
+            responseDTO.setAttendanceStatus(attendance.getAttendanceStatus());
+            responseDTO.setMessage("Success");
+            dtoList.add(responseDTO);
         }
 
         MonthlyAttendanceSummaryDTO summaryDTO = new MonthlyAttendanceSummaryDTO();
@@ -138,18 +173,5 @@ public class AttendanceServiceImpl implements AttendanceService {
         summaryDTO.setAttendanceLogs(dtoList);
 
         return summaryDTO;
-    }
-
-    private AttendanceDTO convertToDTO(Attendance attendance, String message) {
-        AttendanceDTO dto = new AttendanceDTO();
-
-        dto.setAttendanceId(attendance.getAttendanceId());
-        dto.setMemberId(attendance.getMember().getMemberId());
-        dto.setMemberFullName(attendance.getMember().getMemberFullName());
-        dto.setCheckInTime(attendance.getCheckInTime());
-        dto.setAttendanceStatus(attendance.getAttendanceStatus());
-
-        dto.setMessage(message);
-        return dto;
     }
 }
