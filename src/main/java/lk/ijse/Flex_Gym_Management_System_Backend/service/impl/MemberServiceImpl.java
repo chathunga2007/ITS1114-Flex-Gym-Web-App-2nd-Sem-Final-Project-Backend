@@ -80,7 +80,22 @@ public class MemberServiceImpl implements MemberService {
 
         emailService.sendAccountCredentialsEmail(memberDTO.getEmail(), memberDTO.getMemberFullName(), rawPassword);
 
-        return convertToDTO(savedMember);
+        MemberDTO responseDTO = new MemberDTO();
+        responseDTO.setMemberId(savedMember.getMemberId());
+        responseDTO.setMemberFullName(savedMember.getMemberFullName());
+        responseDTO.setMemberPhoneNumber(savedMember.getMemberPhoneNumber());
+
+        if (savedMember.getUser() != null) {
+            responseDTO.setEmail(savedMember.getUser().getEmail());
+        }
+
+        responseDTO.setAge(savedMember.getAge());
+        responseDTO.setGender(savedMember.getGender());
+        responseDTO.setHeightCm(savedMember.getHeightCm());
+        responseDTO.setWeightKg(savedMember.getWeightKg());
+        responseDTO.setMemberStatus(savedMember.getMemberStatus());
+
+        return responseDTO;
     }
 
     @Override
@@ -120,7 +135,22 @@ public class MemberServiceImpl implements MemberService {
         Member updatedMember = memberRepository.save(member);
         log.info("Member updated successfully!");
 
-        return convertToDTO(updatedMember);
+        MemberDTO responseDTO = new MemberDTO();
+        responseDTO.setMemberId(updatedMember.getMemberId());
+        responseDTO.setMemberFullName(updatedMember.getMemberFullName());
+        responseDTO.setMemberPhoneNumber(updatedMember.getMemberPhoneNumber());
+
+        if (updatedMember.getUser() != null) {
+            responseDTO.setEmail(updatedMember.getUser().getEmail());
+        }
+
+        responseDTO.setAge(updatedMember.getAge());
+        responseDTO.setGender(updatedMember.getGender());
+        responseDTO.setHeightCm(updatedMember.getHeightCm());
+        responseDTO.setWeightKg(updatedMember.getWeightKg());
+        responseDTO.setMemberStatus(updatedMember.getMemberStatus());
+
+        return responseDTO;
     }
 
     @Override
@@ -142,7 +172,22 @@ public class MemberServiceImpl implements MemberService {
             throw new CustomException(404, "Member not found with ID: " + id);
         }
 
-        return convertToDTO(member);
+        MemberDTO responseDTO = new MemberDTO();
+        responseDTO.setMemberId(member.getMemberId());
+        responseDTO.setMemberFullName(member.getMemberFullName());
+        responseDTO.setMemberPhoneNumber(member.getMemberPhoneNumber());
+
+        if (member.getUser() != null) {
+            responseDTO.setEmail(member.getUser().getEmail());
+        }
+
+        responseDTO.setAge(member.getAge());
+        responseDTO.setGender(member.getGender());
+        responseDTO.setHeightCm(member.getHeightCm());
+        responseDTO.setWeightKg(member.getWeightKg());
+        responseDTO.setMemberStatus(member.getMemberStatus());
+
+        return responseDTO;
     }
 
     @Override
@@ -152,7 +197,21 @@ public class MemberServiceImpl implements MemberService {
         List<MemberDTO> dtoList = new ArrayList<>();
 
         for (Member member : memberList) {
-            dtoList.add(convertToDTO(member));
+            MemberDTO responseDTO = new MemberDTO();
+            responseDTO.setMemberId(member.getMemberId());
+            responseDTO.setMemberFullName(member.getMemberFullName());
+            responseDTO.setMemberPhoneNumber(member.getMemberPhoneNumber());
+
+            if (member.getUser() != null) {
+                responseDTO.setEmail(member.getUser().getEmail());
+            }
+
+            responseDTO.setAge(member.getAge());
+            responseDTO.setGender(member.getGender());
+            responseDTO.setHeightCm(member.getHeightCm());
+            responseDTO.setWeightKg(member.getWeightKg());
+            responseDTO.setMemberStatus(member.getMemberStatus());
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -181,23 +240,5 @@ public class MemberServiceImpl implements MemberService {
 
         log.info("Member status updated to DELETED successfully!");
         return "Member deleted successfully!";
-    }
-
-    private MemberDTO convertToDTO(Member member) {
-        MemberDTO dto = new MemberDTO();
-        dto.setMemberId(member.getMemberId());
-        dto.setMemberFullName(member.getMemberFullName());
-        dto.setMemberPhoneNumber(member.getMemberPhoneNumber());
-
-        if (member.getUser() != null) {
-            dto.setEmail(member.getUser().getEmail());
-        }
-
-        dto.setAge(member.getAge());
-        dto.setGender(member.getGender());
-        dto.setHeightCm(member.getHeightCm());
-        dto.setWeightKg(member.getWeightKg());
-        dto.setMemberStatus(member.getMemberStatus());
-        return dto;
     }
 }
