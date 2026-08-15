@@ -45,7 +45,12 @@ public class CategoryServiceImpl implements CategoryService {
         Category savedCategory = categoryRepository.save(category);
         log.info("Category saved successfully with ID: {}", savedCategory.getCategoryId());
 
-        return convertToDTO(savedCategory);
+        CategoryDTO responseDTO = new CategoryDTO();
+        responseDTO.setCategoryId(savedCategory.getCategoryId());
+        responseDTO.setCategoryName(savedCategory.getCategoryName());
+        responseDTO.setCategoryDescription(savedCategory.getCategoryDescription());
+        responseDTO.setCategoryStatus(savedCategory.getCategoryStatus());
+        return responseDTO;
     }
 
     @Override
@@ -78,7 +83,12 @@ public class CategoryServiceImpl implements CategoryService {
         Category updatedCategory = categoryRepository.save(category);
         log.info("Category updated successfully!");
 
-        return convertToDTO(updatedCategory);
+        CategoryDTO responseDTO = new CategoryDTO();
+        responseDTO.setCategoryId(updatedCategory.getCategoryId());
+        responseDTO.setCategoryName(updatedCategory.getCategoryName());
+        responseDTO.setCategoryDescription(updatedCategory.getCategoryDescription());
+        responseDTO.setCategoryStatus(updatedCategory.getCategoryStatus());
+        return responseDTO;
     }
 
     @Override
@@ -93,7 +103,13 @@ public class CategoryServiceImpl implements CategoryService {
             throw new CustomException(404, "Category not found with ID: " + id);
         }
 
-        return convertToDTO(optionalCategory.get());
+        Category category = optionalCategory.get();
+        CategoryDTO responseDTO = new CategoryDTO();
+        responseDTO.setCategoryId(category.getCategoryId());
+        responseDTO.setCategoryName(category.getCategoryName());
+        responseDTO.setCategoryDescription(category.getCategoryDescription());
+        responseDTO.setCategoryStatus(category.getCategoryStatus());
+        return responseDTO;
     }
 
     @Override
@@ -103,7 +119,12 @@ public class CategoryServiceImpl implements CategoryService {
         List<CategoryDTO> dtoList = new ArrayList<>();
 
         for (Category category : categoryList) {
-            dtoList.add(convertToDTO(category));
+            CategoryDTO responseDTO = new CategoryDTO();
+            responseDTO.setCategoryId(category.getCategoryId());
+            responseDTO.setCategoryName(category.getCategoryName());
+            responseDTO.setCategoryDescription(category.getCategoryDescription());
+            responseDTO.setCategoryStatus(category.getCategoryStatus());
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -126,14 +147,5 @@ public class CategoryServiceImpl implements CategoryService {
 
         log.info("Category status set to deleted successfully!");
         return "Category deleted successfully!";
-    }
-
-    private CategoryDTO convertToDTO(Category category) {
-        CategoryDTO dto = new CategoryDTO();
-        dto.setCategoryId(category.getCategoryId());
-        dto.setCategoryName(category.getCategoryName());
-        dto.setCategoryDescription(category.getCategoryDescription());
-        dto.setCategoryStatus(category.getCategoryStatus());
-        return dto;
     }
 }
