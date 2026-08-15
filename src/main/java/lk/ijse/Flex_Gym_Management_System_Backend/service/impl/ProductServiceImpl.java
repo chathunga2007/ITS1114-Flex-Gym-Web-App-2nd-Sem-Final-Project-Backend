@@ -63,7 +63,20 @@ public class ProductServiceImpl implements ProductService {
         Product savedProduct = productRepository.save(product);
         log.info("Product saved successfully");
 
-        return convertToDTO(savedProduct);
+        ProductDTO responseDTO = new ProductDTO();
+        responseDTO.setProductId(savedProduct.getProductId());
+        responseDTO.setProductName(savedProduct.getProductName());
+        responseDTO.setProductDescription(savedProduct.getProductDescription());
+        responseDTO.setProductPrice(savedProduct.getProductPrice());
+        responseDTO.setStockQuantity(savedProduct.getStockQuantity());
+        responseDTO.setImageUrl(savedProduct.getImageUrl());
+        responseDTO.setProductStatus(savedProduct.getProductStatus());
+
+        if (savedProduct.getCategory() != null) {
+            responseDTO.setCategoryId(savedProduct.getCategory().getCategoryId());
+            responseDTO.setCategoryName(savedProduct.getCategory().getCategoryName());
+        }
+        return responseDTO;
     }
 
     @Override
@@ -100,6 +113,7 @@ public class ProductServiceImpl implements ProductService {
         product.setProductPrice(productDTO.getProductPrice());
         product.setStockQuantity(productDTO.getStockQuantity());
         product.setImageUrl(productDTO.getImageUrl());
+
         if (productDTO.getProductStatus() != null) {
             product.setProductStatus(productDTO.getProductStatus());
         }
@@ -107,7 +121,20 @@ public class ProductServiceImpl implements ProductService {
         Product updatedProduct = productRepository.save(product);
         log.info("Product updated successfully!");
 
-        return convertToDTO(updatedProduct);
+        ProductDTO responseDTO = new ProductDTO();
+        responseDTO.setProductId(updatedProduct.getProductId());
+        responseDTO.setProductName(updatedProduct.getProductName());
+        responseDTO.setProductDescription(updatedProduct.getProductDescription());
+        responseDTO.setProductPrice(updatedProduct.getProductPrice());
+        responseDTO.setStockQuantity(updatedProduct.getStockQuantity());
+        responseDTO.setImageUrl(updatedProduct.getImageUrl());
+        responseDTO.setProductStatus(updatedProduct.getProductStatus());
+
+        if (updatedProduct.getCategory() != null) {
+            responseDTO.setCategoryId(updatedProduct.getCategory().getCategoryId());
+            responseDTO.setCategoryName(updatedProduct.getCategory().getCategoryName());
+        }
+        return responseDTO;
     }
 
     @Override
@@ -137,7 +164,20 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> dtoList = new ArrayList<>();
 
         for (Product product : productList) {
-            dtoList.add(convertToDTO(product));
+            ProductDTO responseDTO = new ProductDTO();
+            responseDTO.setProductId(product.getProductId());
+            responseDTO.setProductName(product.getProductName());
+            responseDTO.setProductDescription(product.getProductDescription());
+            responseDTO.setProductPrice(product.getProductPrice());
+            responseDTO.setStockQuantity(product.getStockQuantity());
+            responseDTO.setImageUrl(product.getImageUrl());
+            responseDTO.setProductStatus(product.getProductStatus());
+
+            if (product.getCategory() != null) {
+                responseDTO.setCategoryId(product.getCategory().getCategoryId());
+                responseDTO.setCategoryName(product.getCategory().getCategoryName());
+            }
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -154,7 +194,21 @@ public class ProductServiceImpl implements ProductService {
             throw new CustomException(404, "Product not found with ID: " + id);
         }
 
-        return convertToDTO(optionalProduct.get());
+        Product product = optionalProduct.get();
+        ProductDTO responseDTO = new ProductDTO();
+        responseDTO.setProductId(product.getProductId());
+        responseDTO.setProductName(product.getProductName());
+        responseDTO.setProductDescription(product.getProductDescription());
+        responseDTO.setProductPrice(product.getProductPrice());
+        responseDTO.setStockQuantity(product.getStockQuantity());
+        responseDTO.setImageUrl(product.getImageUrl());
+        responseDTO.setProductStatus(product.getProductStatus());
+
+        if (product.getCategory() != null) {
+            responseDTO.setCategoryId(product.getCategory().getCategoryId());
+            responseDTO.setCategoryName(product.getCategory().getCategoryName());
+        }
+        return responseDTO;
     }
 
     @Override
@@ -167,7 +221,20 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> dtoList = new ArrayList<>();
 
         for (Product product : productList) {
-            dtoList.add(convertToDTO(product));
+            ProductDTO responseDTO = new ProductDTO();
+            responseDTO.setProductId(product.getProductId());
+            responseDTO.setProductName(product.getProductName());
+            responseDTO.setProductDescription(product.getProductDescription());
+            responseDTO.setProductPrice(product.getProductPrice());
+            responseDTO.setStockQuantity(product.getStockQuantity());
+            responseDTO.setImageUrl(product.getImageUrl());
+            responseDTO.setProductStatus(product.getProductStatus());
+
+            if (product.getCategory() != null) {
+                responseDTO.setCategoryId(product.getCategory().getCategoryId());
+                responseDTO.setCategoryName(product.getCategory().getCategoryName());
+            }
+            dtoList.add(responseDTO);
         }
         return dtoList;
     }
@@ -181,24 +248,21 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductDTO> dtoList = new ArrayList<>();
         for (Product product : productList) {
-            dtoList.add(convertToDTO(product));
+            ProductDTO responseDTO = new ProductDTO();
+            responseDTO.setProductId(product.getProductId());
+            responseDTO.setProductName(product.getProductName());
+            responseDTO.setProductDescription(product.getProductDescription());
+            responseDTO.setProductPrice(product.getProductPrice());
+            responseDTO.setStockQuantity(product.getStockQuantity());
+            responseDTO.setImageUrl(product.getImageUrl());
+            responseDTO.setProductStatus(product.getProductStatus());
+
+            if (product.getCategory() != null) {
+                responseDTO.setCategoryId(product.getCategory().getCategoryId());
+                responseDTO.setCategoryName(product.getCategory().getCategoryName());
+            }
+            dtoList.add(responseDTO);
         }
         return dtoList;
-    }
-
-    private ProductDTO convertToDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
-        dto.setProductId(product.getProductId());
-        dto.setProductName(product.getProductName());
-        dto.setProductDescription(product.getProductDescription());
-        dto.setProductPrice(product.getProductPrice());
-        dto.setStockQuantity(product.getStockQuantity());
-        dto.setImageUrl(product.getImageUrl());
-        dto.setProductStatus(product.getProductStatus());
-        if (product.getCategory() != null) {
-            dto.setCategoryId(product.getCategory().getCategoryId());
-            dto.setCategoryName(product.getCategory().getCategoryName());
-        }
-        return dto;
     }
 }
