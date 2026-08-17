@@ -96,22 +96,25 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<PaymentDTO> getAllPayments() {
         log.info("Execute getAllPayments()");
-        List<Payment> paymentList = paymentRepository.findAll();
-        List<PaymentDTO> dtoList = new ArrayList<>();
+        List<Payment> paymentList = paymentRepository.findAllByPaymentStatus(PaymentStatus.PAID);
+        List<Payment> pendingList = paymentRepository.findAllByPaymentStatus(PaymentStatus.PENDING);
 
-        for (Payment payment : paymentList) {
-            if (payment.getPaymentStatus() != PaymentStatus.DELETED) {
-                PaymentDTO responseDTO = new PaymentDTO();
-                responseDTO.setPaymentId(payment.getPaymentId());
-                responseDTO.setAmount(payment.getAmount());
-                responseDTO.setPaymentType(payment.getPaymentType());
-                responseDTO.setPaymentStatus(payment.getPaymentStatus());
-                if (payment.getMember() != null) {
-                    responseDTO.setMemberId(payment.getMember().getMemberId());
-                    responseDTO.setMemberName(payment.getMember().getMemberFullName());
-                }
-                dtoList.add(responseDTO);
+        List<Payment> allActivePayments = new ArrayList<>();
+        allActivePayments.addAll(paymentList);
+        allActivePayments.addAll(pendingList);
+
+        List<PaymentDTO> dtoList = new ArrayList<>();
+        for (Payment payment : allActivePayments) {
+            PaymentDTO responseDTO = new PaymentDTO();
+            responseDTO.setPaymentId(payment.getPaymentId());
+            responseDTO.setAmount(payment.getAmount());
+            responseDTO.setPaymentType(payment.getPaymentType());
+            responseDTO.setPaymentStatus(payment.getPaymentStatus());
+            if (payment.getMember() != null) {
+                responseDTO.setMemberId(payment.getMember().getMemberId());
+                responseDTO.setMemberName(payment.getMember().getMemberFullName());
             }
+            dtoList.add(responseDTO);
         }
 
         return dtoList;
@@ -124,22 +127,25 @@ public class PaymentServiceImpl implements PaymentService {
             return new ArrayList<>();
         }
 
-        List<Payment> paymentList = paymentRepository.findAllByMember_MemberId(memberId);
-        List<PaymentDTO> dtoList = new ArrayList<>();
+        List<Payment> paidList = paymentRepository.findAllByMember_MemberIdAndPaymentStatus(memberId, PaymentStatus.PAID);
+        List<Payment> pendingList = paymentRepository.findAllByMember_MemberIdAndPaymentStatus(memberId, PaymentStatus.PENDING);
 
-        for (Payment payment : paymentList) {
-            if (payment.getPaymentStatus() != PaymentStatus.DELETED) {
-                PaymentDTO responseDTO = new PaymentDTO();
-                responseDTO.setPaymentId(payment.getPaymentId());
-                responseDTO.setAmount(payment.getAmount());
-                responseDTO.setPaymentType(payment.getPaymentType());
-                responseDTO.setPaymentStatus(payment.getPaymentStatus());
-                if (payment.getMember() != null) {
-                    responseDTO.setMemberId(payment.getMember().getMemberId());
-                    responseDTO.setMemberName(payment.getMember().getMemberFullName());
-                }
-                dtoList.add(responseDTO);
+        List<Payment> memberActivePayments = new ArrayList<>();
+        memberActivePayments.addAll(paidList);
+        memberActivePayments.addAll(pendingList);
+
+        List<PaymentDTO> dtoList = new ArrayList<>();
+        for (Payment payment : memberActivePayments) {
+            PaymentDTO responseDTO = new PaymentDTO();
+            responseDTO.setPaymentId(payment.getPaymentId());
+            responseDTO.setAmount(payment.getAmount());
+            responseDTO.setPaymentType(payment.getPaymentType());
+            responseDTO.setPaymentStatus(payment.getPaymentStatus());
+            if (payment.getMember() != null) {
+                responseDTO.setMemberId(payment.getMember().getMemberId());
+                responseDTO.setMemberName(payment.getMember().getMemberFullName());
             }
+            dtoList.add(responseDTO);
         }
 
         return dtoList;
