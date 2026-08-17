@@ -11,12 +11,16 @@ import lk.ijse.Flex_Gym_Management_System_Backend.dto.MembershipRequestDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Membership;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Package;
+import lk.ijse.Flex_Gym_Management_System_Backend.entity.Payment;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.MembershipStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PackageStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentType;
 import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MembershipRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.PackageRepository;
+import lk.ijse.Flex_Gym_Management_System_Backend.repository.PaymentRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.MembershipService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,11 +31,13 @@ public class MembershipServiceImpl implements MembershipService {
     private final MembershipRepository membershipRepository;
     private final MemberRepository memberRepository;
     private final PackageRepository packageRepository;
+    private final PaymentRepository paymentRepository;
 
-    public MembershipServiceImpl(MembershipRepository membershipRepository, MemberRepository memberRepository, PackageRepository packageRepository) {
+    public MembershipServiceImpl(MembershipRepository membershipRepository, MemberRepository memberRepository, PackageRepository packageRepository, PaymentRepository paymentRepository) {
         this.membershipRepository = membershipRepository;
         this.memberRepository = memberRepository;
         this.packageRepository = packageRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -82,6 +88,14 @@ public class MembershipServiceImpl implements MembershipService {
 
         Membership savedMembership = membershipRepository.save(membership);
         log.info("Membership saved successfully!");
+
+        Payment payment = new Payment();
+        payment.setAmount(pkg.getPackagePrice());
+        payment.setPaymentType(PaymentType.MEMBERSHIP_FEE);
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setMember(member);
+        paymentRepository.save(payment);
+        log.info("Automatic Membership Fee Payment saved successfully!");
 
         MembershipDTO responseDTO = new MembershipDTO();
         responseDTO.setMembershipId(savedMembership.getMembershipId());
