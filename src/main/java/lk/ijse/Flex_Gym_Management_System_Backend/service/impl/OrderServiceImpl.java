@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.OrderDTO;
@@ -34,12 +36,14 @@ public class OrderServiceImpl implements OrderService {
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
     private final PaymentRepository paymentRepository;
+    private final EmailService emailService;
 
-    public OrderServiceImpl(OrderRepository orderRepository, MemberRepository memberRepository, ProductRepository productRepository, PaymentRepository paymentRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, MemberRepository memberRepository, ProductRepository productRepository, PaymentRepository paymentRepository, EmailService emailService) {
         this.orderRepository = orderRepository;
         this.memberRepository = memberRepository;
         this.productRepository = productRepository;
         this.paymentRepository = paymentRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -145,6 +149,26 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         responseDTO.setItems(itemDTOs);
+
+        try {
+            String memberEmail = null;
+            if (member.getUser() != null) {
+                memberEmail = member.getUser().getEmail();
+            }
+
+            if (memberEmail != null && !memberEmail.isBlank()) {
+                emailService.sendOrderReceiptEmail(
+                        memberEmail,
+                        member.getMemberFullName(),
+                        savedOrder.getOrderId(),
+                        savedOrder.getTotalAmount(),
+                        itemDTOs
+                );
+                log.info("Order receipt email triggered successfully for member: " + member.getMemberFullName());
+            }
+        } catch (Exception e) {
+            log.error("Failed to send order receipt email: " + e.getMessage());
+        }
 
         return responseDTO;
     }
