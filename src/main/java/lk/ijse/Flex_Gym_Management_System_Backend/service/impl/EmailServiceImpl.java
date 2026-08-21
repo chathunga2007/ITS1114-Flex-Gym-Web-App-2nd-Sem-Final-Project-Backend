@@ -1,12 +1,15 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
+import jakarta.mail.internet.MimeMessage;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.OrderItemDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -20,52 +23,75 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendAccountCredentialsEmail(String toEmail, String name, String password) {
-        log.info("Sending credentials email to: {}", toEmail);
+        log.info("Sending HTML credentials email with external CSS to: {}", toEmail);
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("Welcome to Flex Gym - Your Account Credentials");
-            message.setText("Hello " + name + ",\n\n" +
-                    "Welcome to Flex Gym! Your account has been created successfully.\n\n" +
-                    "Email / Username: " + toEmail + "\n" +
-                    "Password: " + password + "\n\n" +
-                    "Please change your password after logging in for security.\n\n" +
-                    "Best Regards,\n" +
-                    "Flex Gym Team");
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            mailSender.send(message);
-            log.info("Email sent successfully!");
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to Flex Gym - Your Account Credentials");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            ClassPathResource htmlResource = new ClassPathResource("html/credentials-email.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent);
+
+            htmlContent = htmlContent.replace("[[name]]", name)
+                    .replace("[[email]]", toEmail)
+                    .replace("[[password]]", password);
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+
+            log.info("HTML Credentials email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+            log.error("Failed to send HTML credentials email to {}: {}", toEmail, e.getMessage());
         }
     }
 
+    @Override
     public void sendOrderReceiptEmail(String toEmail, String memberName, Long orderId, BigDecimal totalAmount, List<OrderItemDTO> items) {
+        log.info("Sending HTML order receipt email with external CSS to: {}", toEmail);
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("Flex Gym - Order Receipt #" + orderId);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            StringBuilder emailBody = new StringBuilder();
-            emailBody.append("Hello ").append(memberName).append(",\n\n");
-            emailBody.append("Thank you for your purchase! Your order has been successfully placed.\n\n");
-            emailBody.append("Order ID: ").append(orderId).append("\n");
-            emailBody.append("Total Amount: Rs. ").append(totalAmount).append("\n\n");
-            emailBody.append("Purchased Items:\n");
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - Order Receipt #" + orderId);
 
-            for (OrderItemDTO item : items) {
-                emailBody.append("- ").append(item.getProductName())
-                        .append(" (Qty: ").append(item.getQuantity())
-                        .append(", Unit Price: Rs. ").append(item.getUnitPrice()).append(")\n");
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            ClassPathResource htmlResource = new ClassPathResource("html/order-receipt.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            StringBuilder rowsBuilder = new StringBuilder();
+            if (items != null) {
+                for (OrderItemDTO item : items) {
+                    rowsBuilder.append("<tr>")
+                            .append("<td>").append(item.getProductName()).append("</td>")
+                            .append("<td>").append(item.getQuantity()).append("</td>")
+                            .append("<td>Rs. ").append(item.getUnitPrice()).append("</td>")
+                            .append("</tr>");
+                }
             }
 
-            emailBody.append("\nStay fit with Flex Gym!\n");
-            message.setText(emailBody.toString());
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent);
 
-            mailSender.send(message);
-            log.info("Order receipt email sent successfully to: " + toEmail);
+            htmlContent = htmlContent.replace("[[memberName]]", memberName)
+                    .replace("[[orderId]]", String.valueOf(orderId))
+                    .replace("[[totalAmount]]", String.valueOf(totalAmount))
+                    .replace("[[tableRows]]", rowsBuilder.toString());
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+
+            log.info("HTML Order receipt email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send order receipt email: " + e.getMessage());
+            log.error("Failed to send HTML order receipt email to {}: {}", toEmail, e.getMessage());
         }
     }
 }
