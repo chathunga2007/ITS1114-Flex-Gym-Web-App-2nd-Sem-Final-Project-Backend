@@ -23,4 +23,8 @@ public class Trainer {
     private String email;
     @Enumerated(EnumType.STRING)
     private TrainerStatus status;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
 }
