@@ -14,5 +14,6 @@ public class TrainerDTO {
     private String specialization;
     private String phoneNumber;
     private String email;
+    private String password;
     private TrainerStatus status;
 }
