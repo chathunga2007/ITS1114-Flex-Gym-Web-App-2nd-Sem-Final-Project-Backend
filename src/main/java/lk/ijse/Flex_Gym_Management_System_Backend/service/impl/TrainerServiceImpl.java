@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.TrainerDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Trainer;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.TrainerStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.TrainerRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.TrainerService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,16 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public TrainerDTO saveTrainer(TrainerDTO trainerDTO) {
-        log.info("Execute Save Trainer!");
+        log.info("Execute saveTrainer()");
+        if (trainerDTO == null) {
+            throw new CustomException(400, "Trainer data cannot be null!");
+        }
+        if (trainerDTO.getTrainerName() == null || trainerDTO.getTrainerName().trim().isEmpty()) {
+            throw new CustomException(400, "Trainer name cannot be empty!");
+        }
+        if (trainerDTO.getEmail() == null || trainerDTO.getEmail().trim().isEmpty()) {
+            throw new CustomException(400, "Trainer email cannot be empty!");
+        }
 
         if (trainerDTO.getStatus() == null) {
             trainerDTO.setStatus(TrainerStatus.ACTIVE);
@@ -46,43 +56,56 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public TrainerDTO updateTrainer(TrainerDTO trainerDTO) {
-        log.info("Execute Update Trainer");
+        log.info("Execute updateTrainer()");
+        if (trainerDTO == null) {
+            throw new CustomException(400, "Trainer data cannot be null!");
+        }
+        if (trainerDTO.getTrainerId() == null) {
+            throw new CustomException(400, "Trainer ID cannot be null for update!");
+        }
+        if (trainerDTO.getTrainerName() == null || trainerDTO.getTrainerName().trim().isEmpty()) {
+            throw new CustomException(400, "Trainer name cannot be empty!");
+        }
 
         Optional<Trainer> optionalTrainer = trainerRepository.findById(trainerDTO.getTrainerId());
-
-        if (optionalTrainer.isPresent()) {
-            Trainer trainer = optionalTrainer.get();
-            trainer.setTrainerName(trainerDTO.getTrainerName());
-            trainer.setSpecialization(trainerDTO.getSpecialization());
-            trainer.setPhoneNumber(trainerDTO.getPhoneNumber());
-            trainer.setEmail(trainerDTO.getEmail());
-            if (trainerDTO.getStatus() != null) {
-                trainer.setStatus(trainerDTO.getStatus());
-            }
-
-            trainerRepository.save(trainer);
-            log.info("Trainer updated successfully!");
+        if (optionalTrainer.isEmpty()) {
+            throw new CustomException(404, "Trainer not found with ID: " + trainerDTO.getTrainerId());
         }
+
+        Trainer trainer = optionalTrainer.get();
+        if (trainer.getStatus() == TrainerStatus.DELETED) {
+            throw new CustomException(400, "Cannot update a deleted trainer!");
+        }
+
+        trainer.setTrainerName(trainerDTO.getTrainerName());
+        trainer.setSpecialization(trainerDTO.getSpecialization());
+        trainer.setPhoneNumber(trainerDTO.getPhoneNumber());
+        trainer.setEmail(trainerDTO.getEmail());
+        if (trainerDTO.getStatus() != null) {
+            trainer.setStatus(trainerDTO.getStatus());
+        }
+
+        trainerRepository.save(trainer);
+        log.info("Trainer updated successfully!");
 
         return trainerDTO;
     }
 
     @Override
     public TrainerDTO getTrainerById(Long id) {
-        log.info("Execute Get Trainer By ID");
+        log.info("Execute getTrainerById()");
+        if (id == null) {
+            throw new CustomException(400, "Trainer ID cannot be null!");
+        }
 
         Optional<Trainer> optionalTrainer = trainerRepository.findById(id);
-
         if (optionalTrainer.isEmpty()) {
-            System.out.println("Trainer not found with ID: " + id);
-            return null;
+            throw new CustomException(404, "Trainer not found with ID: " + id);
         }
 
         Trainer tr = optionalTrainer.get();
-
         if (tr.getStatus() == TrainerStatus.DELETED) {
-            System.out.println("Trainer not found with ID: " + id);
-            return null;
+            throw new CustomException(404, "Trainer not found with ID: " + id);
         }
 
         return new TrainerDTO(
@@ -97,7 +120,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public List<TrainerDTO> getAllTrainers() {
-        log.info("Execute Get All Active Trainers");
+        log.info("Execute getAllTrainers()");
         List<Trainer> trainerList = trainerRepository.findAllByStatus(TrainerStatus.ACTIVE);
         List<TrainerDTO> dtoList = new ArrayList<>();
 
@@ -116,17 +139,25 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public String deleteTrainer(Long id) {
-        log.info("Execute Soft Delete Trainer for ID");
+        log.info("Execute deleteTrainer()");
+        if (id == null) {
+            throw new CustomException(400, "Trainer ID cannot be null!");
+        }
 
         Optional<Trainer> optionalTrainer = trainerRepository.findById(id);
-
-        if (optionalTrainer.isPresent()) {
-            Trainer trainer = optionalTrainer.get();
-            trainer.setStatus(TrainerStatus.DELETED);
-            trainerRepository.save(trainer);
-            log.info("Trainer marked as DELETED successfully!");
-            return "Trainer deleted successfully!";
+        if (optionalTrainer.isEmpty()) {
+            throw new CustomException(404, "Trainer not found with ID: " + id);
         }
-        return "Trainer not found!";
+
+        Trainer trainer = optionalTrainer.get();
+        if (trainer.getStatus() == TrainerStatus.DELETED) {
+            throw new CustomException(400, "Trainer is already deleted!");
+        }
+
+        trainer.setStatus(TrainerStatus.DELETED);
+        trainerRepository.save(trainer);
+
+        log.info("Trainer marked as DELETED successfully!");
+        return "Trainer deleted successfully!";
     }
 }
