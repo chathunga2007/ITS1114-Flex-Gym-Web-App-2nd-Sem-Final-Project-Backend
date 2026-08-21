@@ -18,6 +18,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.OrderStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentType;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.ProductStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.OrderRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.PaymentRepository;
@@ -44,13 +45,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO) {
         log.info("Execute placeOrder()");
-        if (orderDTO == null || orderDTO.getMemberId() == null || orderDTO.getItems() == null || orderDTO.getItems().isEmpty()) {
-            return null;
+        if (orderDTO == null) {
+            throw new CustomException(400, "Order data cannot be null!");
+        }
+        if (orderDTO.getMemberId() == null) {
+            throw new CustomException(400, "Member ID cannot be null!");
+        }
+        if (orderDTO.getItems() == null || orderDTO.getItems().isEmpty()) {
+            throw new CustomException(400, "Order items cannot be empty!");
         }
 
         Optional<Member> optionalMember = memberRepository.findById(orderDTO.getMemberId());
         if (optionalMember.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Member not found with ID: " + orderDTO.getMemberId());
         }
 
         Member member = optionalMember.get();
@@ -67,19 +74,25 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem> orderItemList = new ArrayList<>();
 
         for (OrderItemDTO itemDTO : orderDTO.getItems()) {
-            if (itemDTO == null || itemDTO.getProductId() == null || itemDTO.getQuantity() <= 0) {
-                return null;
+            if (itemDTO == null || itemDTO.getProductId() == null) {
+                throw new CustomException(400, "Product ID cannot be null in order items!");
+            }
+            if (itemDTO.getQuantity() <= 0) {
+                throw new CustomException(400, "Order item quantity must be greater than zero!");
             }
 
             Optional<Product> optionalProduct = productRepository.findById(itemDTO.getProductId());
-            if (optionalProduct.isEmpty() || optionalProduct.get().getProductStatus() == ProductStatus.DELETED) {
-                return null;
+            if (optionalProduct.isEmpty()) {
+                throw new CustomException(404, "Product not found with ID: " + itemDTO.getProductId());
             }
 
             Product product = optionalProduct.get();
+            if (product.getProductStatus() == ProductStatus.DELETED) {
+                throw new CustomException(400, "Cannot order a deleted product: " + product.getProductName());
+            }
 
             if (product.getStockQuantity() < itemDTO.getQuantity()) {
-                return null;
+                throw new CustomException(400, "Insufficient stock for product: " + product.getProductName() + ". Available stock: " + product.getStockQuantity());
             }
 
             product.setStockQuantity(product.getStockQuantity() - itemDTO.getQuantity());
@@ -138,12 +151,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO getOrderById(Long orderId) {
+        log.info("Execute getOrderById()");
         if (orderId == null) {
-            return null;
+            throw new CustomException(400, "Order ID cannot be null!");
         }
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
         if (optionalOrder.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
 
@@ -175,6 +189,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDTO> getAllOrders() {
+        log.info("Execute getAllOrders()");
         List<Order> orderList = orderRepository.findAllByOrderByOrderDateDesc();
         List<OrderDTO> dtoList = new ArrayList<>();
 
@@ -208,8 +223,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDTO> getOrdersByMemberId(Long memberId) {
+        log.info("Execute getOrdersByMemberId()");
         if (memberId == null) {
-            return new ArrayList<>();
+            throw new CustomException(400, "Member ID cannot be null!");
         }
         List<Order> orderList = orderRepository.findAllByMember_MemberIdOrderByOrderDateDesc(memberId);
         List<OrderDTO> dtoList = new ArrayList<>();
