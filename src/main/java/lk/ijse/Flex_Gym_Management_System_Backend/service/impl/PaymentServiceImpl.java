@@ -9,6 +9,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.dto.PaymentDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Payment;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.PaymentRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.PaymentService;
@@ -29,13 +30,19 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentDTO savePayment(PaymentDTO paymentDTO) {
         log.info("Execute savePayment()");
-        if (paymentDTO == null || paymentDTO.getAmount() == null || paymentDTO.getMemberId() == null) {
-            return null;
+        if (paymentDTO == null) {
+            throw new CustomException(400, "Payment data cannot be null!");
+        }
+        if (paymentDTO.getAmount() == null) {
+            throw new CustomException(400, "Payment amount cannot be null!");
+        }
+        if (paymentDTO.getMemberId() == null) {
+            throw new CustomException(400, "Member ID cannot be null!");
         }
 
         Optional<Member> optionalMember = memberRepository.findById(paymentDTO.getMemberId());
         if (optionalMember.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Member not found with ID: " + paymentDTO.getMemberId());
         }
 
         Member member = optionalMember.get();
@@ -66,18 +73,18 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO getPaymentById(Long id) {
         log.info("Execute getPaymentById()");
         if (id == null) {
-            return null;
+            throw new CustomException(400, "Payment ID cannot be null!");
         }
 
         Optional<Payment> optionalPayment = paymentRepository.findById(id);
         if (optionalPayment.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Payment not found with ID: " + id);
         }
 
         Payment payment = optionalPayment.get();
 
         if (payment.getPaymentStatus() == PaymentStatus.DELETED) {
-            return null;
+            throw new CustomException(404, "Payment not found with ID: " + id);
         }
 
         PaymentDTO responseDTO = new PaymentDTO();
@@ -124,7 +131,7 @@ public class PaymentServiceImpl implements PaymentService {
     public List<PaymentDTO> getPaymentsByMemberId(Long memberId) {
         log.info("Execute getPaymentsByMemberId()");
         if (memberId == null) {
-            return new ArrayList<>();
+            throw new CustomException(400, "Member ID cannot be null!");
         }
 
         List<Payment> paidList = paymentRepository.findAllByMember_MemberIdAndPaymentStatus(memberId, PaymentStatus.PAID);
@@ -153,19 +160,19 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public String deletePayment(Long id) {
-        log.info("Execute Soft Delete Payment()");
+        log.info("Execute deletePayment()");
         if (id == null) {
-            return "Payment ID cannot be null!";
+            throw new CustomException(400, "Payment ID cannot be null!");
         }
 
         Optional<Payment> optionalPayment = paymentRepository.findById(id);
         if (optionalPayment.isEmpty()) {
-            return "Payment not found!";
+            throw new CustomException(404, "Payment not found with ID: " + id);
         }
 
         Payment payment = optionalPayment.get();
         if (payment.getPaymentStatus() == PaymentStatus.DELETED) {
-            return "Payment is already deleted!";
+            throw new CustomException(400, "Payment is already deleted!");
         }
 
         payment.setPaymentStatus(PaymentStatus.DELETED);
