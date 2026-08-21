@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.WorkoutPlanDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.WorkoutPlan;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.WorkoutPlanRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.WorkoutPlanService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +26,11 @@ public class WorkoutPlanServiceImpl implements WorkoutPlanService {
     @Override
     public WorkoutPlanDTO saveWorkoutPlan(WorkoutPlanDTO dto) {
         log.info("Execute saveWorkoutPlan()");
-        if (dto == null || dto.getPlanName() == null) {
-            return null;
+        if (dto == null) {
+            throw new CustomException(400, "Workout plan data cannot be null!");
+        }
+        if (dto.getPlanName() == null || dto.getPlanName().trim().isEmpty()) {
+            throw new CustomException(400, "Workout plan name cannot be empty!");
         }
 
         WorkoutPlan plan = new WorkoutPlan();
@@ -50,18 +54,24 @@ public class WorkoutPlanServiceImpl implements WorkoutPlanService {
     @Override
     public WorkoutPlanDTO updateWorkoutPlan(WorkoutPlanDTO dto) {
         log.info("Execute updateWorkoutPlan()");
-        if (dto == null || dto.getPlanId() == null) {
-            return null;
+        if (dto == null) {
+            throw new CustomException(400, "Workout plan data cannot be null!");
+        }
+        if (dto.getPlanId() == null) {
+            throw new CustomException(400, "Workout plan ID cannot be null for update!");
+        }
+        if (dto.getPlanName() == null || dto.getPlanName().trim().isEmpty()) {
+            throw new CustomException(400, "Workout plan name cannot be empty!");
         }
 
         Optional<WorkoutPlan> optionalPlan = workoutPlanRepository.findById(dto.getPlanId());
         if (optionalPlan.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Workout plan not found with ID: " + dto.getPlanId());
         }
 
         WorkoutPlan plan = optionalPlan.get();
         if (plan.getPlanStatus() == PlanStatus.DELETED) {
-            return null;
+            throw new CustomException(400, "Cannot update a deleted workout plan!");
         }
 
         plan.setPlanName(dto.getPlanName());
@@ -82,17 +92,19 @@ public class WorkoutPlanServiceImpl implements WorkoutPlanService {
 
     @Override
     public String deleteWorkoutPlan(Long id) {
-        log.info("Execute Soft Delete WorkoutPlan()");
-        if (id == null) return "Invalid ID!";
+        log.info("Execute deleteWorkoutPlan()");
+        if (id == null) {
+            throw new CustomException(400, "Workout plan ID cannot be null!");
+        }
 
         Optional<WorkoutPlan> optionalPlan = workoutPlanRepository.findById(id);
         if (optionalPlan.isEmpty()) {
-            return "Workout plan not found!";
+            throw new CustomException(404, "Workout plan not found with ID: " + id);
         }
 
         WorkoutPlan plan = optionalPlan.get();
         if (plan.getPlanStatus() == PlanStatus.DELETED) {
-            return "Workout plan is already deleted!";
+            throw new CustomException(400, "Workout plan is already deleted!");
         }
 
         plan.setPlanStatus(PlanStatus.DELETED);
@@ -105,16 +117,18 @@ public class WorkoutPlanServiceImpl implements WorkoutPlanService {
     @Override
     public WorkoutPlanDTO getWorkoutPlanById(Long id) {
         log.info("Execute getWorkoutPlanById()");
-        if (id == null) return null;
+        if (id == null) {
+            throw new CustomException(400, "Workout plan ID cannot be null!");
+        }
 
         Optional<WorkoutPlan> optionalPlan = workoutPlanRepository.findById(id);
         if (optionalPlan.isEmpty()) {
-            log.error("Workout plan not found!");
-        };
+            throw new CustomException(404, "Workout plan not found with ID: " + id);
+        }
 
         WorkoutPlan plan = optionalPlan.get();
         if (plan.getPlanStatus() == PlanStatus.DELETED) {
-            return null;
+            throw new CustomException(404, "Workout plan not found with ID: " + id);
         }
 
         return new WorkoutPlanDTO(
