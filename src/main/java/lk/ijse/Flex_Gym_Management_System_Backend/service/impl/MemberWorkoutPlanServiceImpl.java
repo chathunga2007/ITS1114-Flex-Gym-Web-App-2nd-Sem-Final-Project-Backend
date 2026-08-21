@@ -12,6 +12,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.entity.MemberWorkoutPlan;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Trainer;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.WorkoutPlan;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PlanStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberWorkoutPlanRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.TrainerRepository;
@@ -38,16 +39,32 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
     @Override
     public MemberWorkoutPlanDTO assignWorkoutPlan(MemberWorkoutPlanDTO dto) {
         log.info("Execute assignWorkoutPlan()");
-        if (dto == null || dto.getMemberId() == null || dto.getPlanId() == null || dto.getTrainerId() == null) {
-            return null;
+        if (dto == null) {
+            throw new CustomException(400, "Member workout plan data cannot be null!");
+        }
+        if (dto.getMemberId() == null) {
+            throw new CustomException(400, "Member ID cannot be null!");
+        }
+        if (dto.getPlanId() == null) {
+            throw new CustomException(400, "Workout Plan ID cannot be null!");
+        }
+        if (dto.getTrainerId() == null) {
+            throw new CustomException(400, "Trainer ID cannot be null!");
         }
 
         Optional<Member> memberOpt = memberRepository.findById(dto.getMemberId());
-        Optional<WorkoutPlan> planOpt = workoutPlanRepository.findById(dto.getPlanId());
-        Optional<Trainer> trainerOpt = trainerRepository.findById(dto.getTrainerId());
+        if (memberOpt.isEmpty()) {
+            throw new CustomException(404, "Member not found with ID: " + dto.getMemberId());
+        }
 
-        if (memberOpt.isEmpty() || planOpt.isEmpty() || trainerOpt.isEmpty()) {
-            return null;
+        Optional<WorkoutPlan> planOpt = workoutPlanRepository.findById(dto.getPlanId());
+        if (planOpt.isEmpty()) {
+            throw new CustomException(404, "Workout plan not found with ID: " + dto.getPlanId());
+        }
+
+        Optional<Trainer> trainerOpt = trainerRepository.findById(dto.getTrainerId());
+        if (trainerOpt.isEmpty()) {
+            throw new CustomException(404, "Trainer not found with ID: " + dto.getTrainerId());
         }
 
         MemberWorkoutPlan mapEntity = new MemberWorkoutPlan();
@@ -72,19 +89,22 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
 
     @Override
     public MemberWorkoutPlanDTO updateMemberWorkoutPlan(MemberWorkoutPlanDTO dto) {
-        log.info("Execute updateWorkoutPlan()");
-        if (dto == null || dto.getId() == null) {
-            return null;
+        log.info("Execute updateMemberWorkoutPlan()");
+        if (dto == null) {
+            throw new CustomException(400, "Member workout plan data cannot be null!");
+        }
+        if (dto.getId() == null) {
+            throw new CustomException(400, "Record ID cannot be null for update!");
         }
 
         Optional<MemberWorkoutPlan> optionalPlan = memberWorkoutPlanRepository.findById(dto.getId());
         if (optionalPlan.isEmpty()) {
-            return null;
+            throw new CustomException(404, "Assigned workout plan not found with ID: " + dto.getId());
         }
 
         MemberWorkoutPlan map = optionalPlan.get();
         if (map.getPlanStatus() == PlanStatus.DELETED) {
-            return null;
+            throw new CustomException(400, "Cannot update a deleted workout plan assignment!");
         }
 
         if (dto.getMemberId() != null) {
@@ -92,7 +112,7 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
             if (memberOpt.isPresent()) {
                 map.setMember(memberOpt.get());
             } else {
-                log.warn("Member not found with ID: {}", dto.getMemberId());
+                throw new CustomException(404, "Member not found with ID: " + dto.getMemberId());
             }
         }
 
@@ -101,7 +121,7 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
             if (planOpt.isPresent()) {
                 map.setWorkoutPlan(planOpt.get());
             } else {
-                log.warn("Workout Plan not found with ID: {}", dto.getPlanId());
+                throw new CustomException(404, "Workout plan not found with ID: " + dto.getPlanId());
             }
         }
 
@@ -110,7 +130,7 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
             if (trainerOpt.isPresent()) {
                 map.setTrainer(trainerOpt.get());
             } else {
-                log.warn("Trainer not found with ID: {}", dto.getTrainerId());
+                throw new CustomException(404, "Trainer not found with ID: " + dto.getTrainerId());
             }
         }
 
@@ -136,17 +156,19 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
 
     @Override
     public String deleteMemberWorkoutPlan(Long id) {
-        log.info("Execute Soft Delete MemberWorkoutPlan()");
-        if (id == null) return "Invalid ID!";
+        log.info("Execute deleteMemberWorkoutPlan()");
+        if (id == null) {
+            throw new CustomException(400, "ID cannot be null!");
+        }
 
         Optional<MemberWorkoutPlan> optional = memberWorkoutPlanRepository.findById(id);
         if (optional.isEmpty()) {
-            return "Assigned workout plan not found!";
+            throw new CustomException(404, "Assigned workout plan not found with ID: " + id);
         }
 
         MemberWorkoutPlan map = optional.get();
         if (map.getPlanStatus() == PlanStatus.DELETED) {
-            return "Already deleted!";
+            throw new CustomException(400, "Assigned workout plan is already deleted!");
         }
 
         map.setPlanStatus(PlanStatus.DELETED);
@@ -159,14 +181,20 @@ public class MemberWorkoutPlanServiceImpl implements MemberWorkoutPlanService {
     @Override
     public MemberWorkoutPlanDTO getMemberWorkoutPlanById(Long id) {
         log.info("Execute getMemberWorkoutPlanById()");
-        if (id == null) return null;
+        if (id == null) {
+            throw new CustomException(400, "ID cannot be null!");
+        }
 
         Optional<MemberWorkoutPlan> optional = memberWorkoutPlanRepository.findById(id);
-        if (optional.isEmpty() || optional.get().getPlanStatus() == PlanStatus.DELETED) {
-            return null;
+        if (optional.isEmpty()) {
+            throw new CustomException(404, "Assigned workout plan not found with ID: " + id);
         }
 
         MemberWorkoutPlan memWorkout = optional.get();
+        if (memWorkout.getPlanStatus() == PlanStatus.DELETED) {
+            throw new CustomException(404, "Assigned workout plan not found with ID: " + id);
+        }
+
         return new MemberWorkoutPlanDTO(
                 memWorkout.getId(),
                 memWorkout.getAssignedDate(),
