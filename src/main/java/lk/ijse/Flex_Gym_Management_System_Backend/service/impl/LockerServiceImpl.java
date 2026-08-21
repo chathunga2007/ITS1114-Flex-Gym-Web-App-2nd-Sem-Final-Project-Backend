@@ -5,6 +5,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.dto.LockerDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Locker;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.LockerStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.LockerRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.LockerService;
@@ -28,7 +29,13 @@ public class LockerServiceImpl implements LockerService {
 
     @Override
     public LockerDTO saveLocker(LockerDTO lockerDTO) {
-        log.info("Execute Save Locker!");
+        log.info("Execute saveLocker()");
+        if (lockerDTO == null) {
+            throw new CustomException(400, "Locker data cannot be null!");
+        }
+        if (lockerDTO.getLockerNumber() == null || lockerDTO.getLockerNumber().trim().isEmpty()) {
+            throw new CustomException(400, "Locker number cannot be empty!");
+        }
 
         if (lockerDTO.getStatus() == null) {
             lockerDTO.setStatus(LockerStatus.AVAILABLE);
@@ -43,6 +50,8 @@ public class LockerServiceImpl implements LockerService {
             Optional<Member> optionalMember = memberRepository.findById(lockerDTO.getMemberId());
             if (optionalMember.isPresent()) {
                 locker.setMember(optionalMember.get());
+            } else {
+                throw new CustomException(404, "Member not found with ID: " + lockerDTO.getMemberId());
             }
         } else {
             locker.setMember(null);
@@ -57,88 +66,110 @@ public class LockerServiceImpl implements LockerService {
 
     @Override
     public LockerDTO updateLocker(LockerDTO lockerDTO) {
-        log.info("Execute Update Locker");
+        log.info("Execute updateLocker()");
+        if (lockerDTO == null) {
+            throw new CustomException(400, "Locker data cannot be null!");
+        }
+        if (lockerDTO.getLockerId() == null) {
+            throw new CustomException(400, "Locker ID cannot be null for update!");
+        }
 
         Optional<Locker> optionalLocker = lockerRepository.findById(lockerDTO.getLockerId());
-
-        if (optionalLocker.isPresent()) {
-            Locker locker = optionalLocker.get();
-            locker.setLockerNumber(lockerDTO.getLockerNumber());
-            if (lockerDTO.getIsOccupied() != null) {
-                locker.setIsOccupied(lockerDTO.getIsOccupied());
-            }
-            if (lockerDTO.getStatus() != null) {
-                locker.setStatus(lockerDTO.getStatus());
-            }
-
-            if (lockerDTO.getMemberId() != null) {
-                Optional<Member> optionalMember = memberRepository.findById(lockerDTO.getMemberId());
-                if (optionalMember.isPresent()) {
-                    locker.setMember(optionalMember.get());
-                }
-            } else {
-                locker.setMember(null);
-            }
-
-            lockerRepository.save(locker);
-            log.info("Locker updated successfully!");
+        if (optionalLocker.isEmpty()) {
+            throw new CustomException(404, "Locker not found with ID: " + lockerDTO.getLockerId());
         }
+
+        Locker locker = optionalLocker.get();
+        if (locker.getStatus() == LockerStatus.DELETED) {
+            throw new CustomException(400, "Cannot update a deleted locker!");
+        }
+
+        locker.setLockerNumber(lockerDTO.getLockerNumber());
+        if (lockerDTO.getIsOccupied() != null) {
+            locker.setIsOccupied(lockerDTO.getIsOccupied());
+        }
+        if (lockerDTO.getStatus() != null) {
+            locker.setStatus(lockerDTO.getStatus());
+        }
+
+        if (lockerDTO.getMemberId() != null) {
+            Optional<Member> optionalMember = memberRepository.findById(lockerDTO.getMemberId());
+            if (optionalMember.isPresent()) {
+                locker.setMember(optionalMember.get());
+            } else {
+                throw new CustomException(404, "Member not found with ID: " + lockerDTO.getMemberId());
+            }
+        } else {
+            locker.setMember(null);
+        }
+
+        lockerRepository.save(locker);
+        log.info("Locker updated successfully!");
 
         return lockerDTO;
     }
 
     @Override
     public String deleteLocker(Long id) {
-        log.info("Execute Soft Delete Locker for ID: " + id);
+        log.info("Execute deleteLocker() for ID: " + id);
+        if (id == null) {
+            throw new CustomException(400, "Locker ID cannot be null!");
+        }
 
         Optional<Locker> optionalLocker = lockerRepository.findById(id);
-
-        if (optionalLocker.isPresent()) {
-            Locker locker = optionalLocker.get();
-            locker.setStatus(LockerStatus.DELETED);
-            lockerRepository.save(locker);
-            log.info("Locker marked as DELETED successfully!");
-            return "Locker deleted successfully!";
+        if (optionalLocker.isEmpty()) {
+            throw new CustomException(404, "Locker not found with ID: " + id);
         }
-        return "Locker not found!";
+
+        Locker locker = optionalLocker.get();
+        if (locker.getStatus() == LockerStatus.DELETED) {
+            throw new CustomException(400, "Locker is already deleted!");
+        }
+
+        locker.setStatus(LockerStatus.DELETED);
+        lockerRepository.save(locker);
+
+        log.info("Locker marked as DELETED successfully!");
+        return "Locker deleted successfully!";
     }
 
     @Override
     public List<LockerDTO> getAllLockers() {
-        log.info("Execute Get All Active Lockers");
-        List<Locker> lockerList = lockerRepository.findAllByStatus(LockerStatus.DELETED);
+        log.info("Execute getAllLockers()");
+        List<Locker> lockerList = lockerRepository.findAll();
         List<LockerDTO> dtoList = new ArrayList<>();
 
         for (Locker lk : lockerList) {
-            LockerDTO dto = new LockerDTO();
-            dto.setLockerId(lk.getLockerId());
-            dto.setLockerNumber(lk.getLockerNumber());
-            dto.setIsOccupied(lk.getIsOccupied());
-            dto.setStatus(lk.getStatus());
-            if (lk.getMember() != null) {
-                dto.setMemberId(lk.getMember().getMemberId());
+            if (lk.getStatus() != LockerStatus.DELETED) {
+                LockerDTO dto = new LockerDTO();
+                dto.setLockerId(lk.getLockerId());
+                dto.setLockerNumber(lk.getLockerNumber());
+                dto.setIsOccupied(lk.getIsOccupied());
+                dto.setStatus(lk.getStatus());
+                if (lk.getMember() != null) {
+                    dto.setMemberId(lk.getMember().getMemberId());
+                }
+                dtoList.add(dto);
             }
-            dtoList.add(dto);
         }
         return dtoList;
     }
 
     @Override
     public LockerDTO getLockerById(Long id) {
-        log.info("Execute Get Locker By ID");
+        log.info("Execute getLockerById()");
+        if (id == null) {
+            throw new CustomException(400, "Locker ID cannot be null!");
+        }
 
         Optional<Locker> optionalLocker = lockerRepository.findById(id);
-
         if (optionalLocker.isEmpty()) {
-            System.out.println("Locker not found with ID: " + id);
-            return null;
+            throw new CustomException(404, "Locker not found with ID: " + id);
         }
 
         Locker lk = optionalLocker.get();
-
         if (lk.getStatus() == LockerStatus.DELETED) {
-            System.out.println("Locker not found with ID: " + id);
-            return null;
+            throw new CustomException(404, "Locker not found with ID: " + id);
         }
 
         LockerDTO dto = new LockerDTO();
