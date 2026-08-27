@@ -9,4 +9,5 @@ public interface UserService {
     String deleteUser(Long userId);
     List<UserDTO> getAllUsers();
     UserDTO getAllUser(Long userId);
+    UserDTO getUserDetails(String email, String password);
 }
