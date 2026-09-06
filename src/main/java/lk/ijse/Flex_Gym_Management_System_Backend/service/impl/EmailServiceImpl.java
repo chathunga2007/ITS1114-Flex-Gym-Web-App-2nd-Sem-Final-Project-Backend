@@ -94,4 +94,65 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send HTML order receipt email to {}: {}", toEmail, e.getMessage());
         }
     }
+
+    @Override
+    public void sendMembershipExpiryReminderEmail(String toEmail, String memberName, String packageName, String expiryDate, int daysRemaining) {
+        log.info("Sending membership expiry reminder email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - Membership Expiry Reminder (in " + daysRemaining + " days)");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            ClassPathResource htmlResource = new ClassPathResource("html/membership-reminder-email.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent)
+                    .replace("[[memberName]]", memberName)
+                    .replace("[[packageName]]", packageName)
+                    .replace("[[expiryDate]]", expiryDate)
+                    .replace("[[daysRemaining]]", String.valueOf(daysRemaining));
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+
+            log.info("Membership expiry reminder email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send membership expiry reminder email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendMembershipExpiredEmail(String toEmail, String memberName, String packageName, String expiredDate) {
+        log.info("Sending membership expired notification email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - Your Membership Has Expired");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            ClassPathResource htmlResource = new ClassPathResource("html/membership-expired-email.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent)
+                    .replace("[[memberName]]", memberName)
+                    .replace("[[packageName]]", packageName)
+                    .replace("[[expiredDate]]", expiredDate);
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+
+            log.info("Membership expired notification email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send membership expired email to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }

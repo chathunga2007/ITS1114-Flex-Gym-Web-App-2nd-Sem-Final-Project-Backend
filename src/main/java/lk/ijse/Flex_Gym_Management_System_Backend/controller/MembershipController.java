@@ -3,10 +3,12 @@ package lk.ijse.Flex_Gym_Management_System_Backend.controller;
 import lk.ijse.Flex_Gym_Management_System_Backend.constant.CommonResponse;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.MembershipDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.MembershipRequestDTO;
+import lk.ijse.Flex_Gym_Management_System_Backend.scheduler.MembershipScheduler;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.MembershipService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 import static lk.ijse.Flex_Gym_Management_System_Backend.constant.ResponseMessage.SUCCESS_MESSAGE;
 import static lk.ijse.Flex_Gym_Management_System_Backend.constant.ResponseStatusCode.OPERATION_SUCCESS;
 
@@ -14,9 +16,11 @@ import static lk.ijse.Flex_Gym_Management_System_Backend.constant.ResponseStatus
 @RequestMapping("api/memberships")
 public class MembershipController {
     private final MembershipService membershipService;
+    private final MembershipScheduler membershipScheduler;
 
-    public MembershipController(MembershipService membershipService) {
+    public MembershipController(MembershipService membershipService, MembershipScheduler membershipScheduler) {
         this.membershipService = membershipService;
+        this.membershipScheduler = membershipScheduler;
     }
 
     @PostMapping(value = "/saveMembership", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -53,5 +57,11 @@ public class MembershipController {
     public CommonResponse getMembershipsByMember(@PathVariable Long memberId) {
         List<MembershipDTO> membershipDTOList = membershipService.getMembershipsByMemberId(memberId);
         return new CommonResponse(OPERATION_SUCCESS, membershipDTOList, SUCCESS_MESSAGE);
+    }
+
+    @PostMapping(value = "/run-expiry-check", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse runMembershipExpiryCheck() {
+        Map<String, Object> result = membershipScheduler.processMembershipExpirations();
+        return new CommonResponse(OPERATION_SUCCESS, result, "Membership expiry check completed successfully!");
     }
 }
