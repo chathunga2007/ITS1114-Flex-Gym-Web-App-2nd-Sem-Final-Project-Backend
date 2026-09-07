@@ -24,6 +24,12 @@ public class PaymentController {
         return new CommonResponse(OPERATION_SUCCESS, savedPaymentDTO, SUCCESS_MESSAGE);
     }
 
+    @PutMapping(value = "/updatePaymentStatus/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse updatePaymentStatus(@PathVariable Long id, @RequestParam(name = "paymentStatus", defaultValue = "PAID") lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentStatus paymentStatus) {
+        PaymentDTO updatedPaymentDTO = paymentService.updatePaymentStatus(id, paymentStatus);
+        return new CommonResponse(OPERATION_SUCCESS, updatedPaymentDTO, SUCCESS_MESSAGE);
+    }
+
     @GetMapping(value = "/getPayment/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getPaymentById(@PathVariable Long id) {
         PaymentDTO paymentDTO = paymentService.getPaymentById(id);
