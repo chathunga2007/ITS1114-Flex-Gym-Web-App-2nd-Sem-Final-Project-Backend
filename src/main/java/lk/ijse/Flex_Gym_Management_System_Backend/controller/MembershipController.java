@@ -29,6 +29,30 @@ public class MembershipController {
         return new CommonResponse(OPERATION_SUCCESS, savedMembershipDTO, SUCCESS_MESSAGE);
     }
 
+    @PostMapping(value = "/requestMembership", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse requestMembership(@RequestBody MembershipRequestDTO requestDTO) {
+        MembershipDTO requestedMembershipDTO = membershipService.requestMembership(requestDTO);
+        return new CommonResponse(OPERATION_SUCCESS, requestedMembershipDTO, "Membership request submitted successfully! Awaiting Admin/Front-desk approval.");
+    }
+
+    @PutMapping(value = "/approveMembership/{membershipId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse approveMembership(@PathVariable Long membershipId) {
+        MembershipDTO approvedMembershipDTO = membershipService.approveMembership(membershipId);
+        return new CommonResponse(OPERATION_SUCCESS, approvedMembershipDTO, "Membership request approved successfully!");
+    }
+
+    @PutMapping(value = "/rejectMembership/{membershipId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse rejectMembership(@PathVariable Long membershipId) {
+        MembershipDTO rejectedMembershipDTO = membershipService.rejectMembership(membershipId);
+        return new CommonResponse(OPERATION_SUCCESS, rejectedMembershipDTO, "Membership request rejected.");
+    }
+
+    @GetMapping(value = "/getAllPendingMemberships", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse getAllPendingMemberships() {
+        List<MembershipDTO> pendingList = membershipService.getAllPendingMemberships();
+        return new CommonResponse(OPERATION_SUCCESS, pendingList, SUCCESS_MESSAGE);
+    }
+
     @PutMapping(value = "/updateMembership/{membershipId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse updateMembership(@PathVariable Long membershipId, @RequestBody MembershipRequestDTO requestDTO) {
         MembershipDTO updatedMembershipDTO = membershipService.updateMembership(membershipId, requestDTO);
