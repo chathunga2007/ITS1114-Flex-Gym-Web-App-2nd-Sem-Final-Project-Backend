@@ -6,9 +6,13 @@ import java.util.List;
 
 public interface MembershipService {
     MembershipDTO createMembership(MembershipRequestDTO requestDTO);
+    MembershipDTO requestMembership(MembershipRequestDTO requestDTO);
+    MembershipDTO approveMembership(Long membershipId);
+    MembershipDTO rejectMembership(Long membershipId);
     MembershipDTO updateMembership(Long membershipId, MembershipRequestDTO requestDTO);
     MembershipDTO getMembershipById(Long id);
     List<MembershipDTO> getMembershipsByMemberId(Long memberId);
     List<MembershipDTO> getAllActiveMemberships();
+    List<MembershipDTO> getAllPendingMemberships();
     String deleteMembership(Long id);
 }
