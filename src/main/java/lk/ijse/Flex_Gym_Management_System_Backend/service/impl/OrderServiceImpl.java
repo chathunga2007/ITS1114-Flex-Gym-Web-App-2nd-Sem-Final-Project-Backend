@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -69,10 +68,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setMember(member);
         order.setOrderDate(LocalDateTime.now());
-        order.setOrderStatus(OrderStatus.COMPLETED);
 
-        PaymentStatus paymentStatus = orderDTO.getPaymentStatus() != null ? orderDTO.getPaymentStatus() : PaymentStatus.PAID;
+        PaymentStatus paymentStatus = orderDTO.getPaymentStatus() != null ? orderDTO.getPaymentStatus() : PaymentStatus.PENDING;
         order.setPaymentStatus(paymentStatus);
+
+        OrderStatus orderStatus = orderDTO.getOrderStatus() != null ? orderDTO.getOrderStatus() : (paymentStatus == PaymentStatus.PENDING ? OrderStatus.PENDING : OrderStatus.COMPLETED);
+        order.setOrderStatus(orderStatus);
 
         BigDecimal calculatedTotal = BigDecimal.ZERO;
         List<OrderItem> orderItemList = new ArrayList<>();
@@ -280,5 +281,59 @@ public class OrderServiceImpl implements OrderService {
             dtoList.add(responseDTO);
         }
         return dtoList;
+    }
+
+    @Override
+    public OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus, PaymentStatus paymentStatus) {
+        log.info("Execute updateOrderStatus() for orderId: {}", orderId);
+        if (orderId == null) {
+            throw new CustomException(400, "Order ID cannot be null!");
+        }
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) {
+            throw new CustomException(404, "Order not found with ID: " + orderId);
+        }
+        Order order = optionalOrder.get();
+        if (orderStatus != null) {
+            order.setOrderStatus(orderStatus);
+        }
+        if (paymentStatus != null) {
+            order.setPaymentStatus(paymentStatus);
+            if (paymentStatus == PaymentStatus.PAID && order.getMember() != null) {
+                List<Payment> pendingPayments = paymentRepository.findAllByMember_MemberIdAndPaymentStatus(order.getMember().getMemberId(), PaymentStatus.PENDING);
+                for (Payment p : pendingPayments) {
+                    if (p.getPaymentType() == PaymentType.SHOP_ORDER) {
+                        p.setPaymentStatus(PaymentStatus.PAID);
+                        paymentRepository.save(p);
+                        break;
+                    }
+                }
+            }
+        }
+        Order updatedOrder = orderRepository.save(order);
+
+        OrderDTO responseDTO = new OrderDTO();
+        responseDTO.setOrderId(updatedOrder.getOrderId());
+        responseDTO.setMemberId(updatedOrder.getMember().getMemberId());
+        responseDTO.setMemberFullName(updatedOrder.getMember().getMemberFullName());
+        responseDTO.setTotalAmount(updatedOrder.getTotalAmount());
+        responseDTO.setOrderDate(updatedOrder.getOrderDate());
+        responseDTO.setOrderStatus(updatedOrder.getOrderStatus());
+        responseDTO.setPaymentStatus(updatedOrder.getPaymentStatus());
+
+        List<OrderItemDTO> itemDTOs = new ArrayList<>();
+        if (updatedOrder.getOrderItems() != null) {
+            for (OrderItem item : updatedOrder.getOrderItems()) {
+                OrderItemDTO itemDTO = new OrderItemDTO();
+                itemDTO.setOrderItemId(item.getOrderItemId());
+                itemDTO.setProductId(item.getProduct().getProductId());
+                itemDTO.setProductName(item.getProduct().getProductName());
+                itemDTO.setQuantity(item.getQuantity());
+                itemDTO.setUnitPrice(item.getUnitPrice());
+                itemDTOs.add(itemDTO);
+            }
+        }
+        responseDTO.setItems(itemDTOs);
+        return responseDTO;
     }
 }
