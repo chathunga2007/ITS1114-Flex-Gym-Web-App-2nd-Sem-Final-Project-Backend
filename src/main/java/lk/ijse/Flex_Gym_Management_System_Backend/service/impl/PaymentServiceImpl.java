@@ -48,8 +48,16 @@ public class PaymentServiceImpl implements PaymentService {
         Member member = optionalMember.get();
 
         Payment payment = new Payment();
+        if (paymentDTO.getPaymentId() != null) {
+            Optional<Payment> existingPayment = paymentRepository.findById(paymentDTO.getPaymentId());
+            if (existingPayment.isPresent()) {
+                payment = existingPayment.get();
+            }
+        }
         payment.setAmount(paymentDTO.getAmount());
-        payment.setPaymentType(paymentDTO.getPaymentType());
+        if (paymentDTO.getPaymentType() != null) {
+            payment.setPaymentType(paymentDTO.getPaymentType());
+        }
         payment.setPaymentStatus(paymentDTO.getPaymentStatus() != null ? paymentDTO.getPaymentStatus() : PaymentStatus.PAID);
         payment.setMember(member);
 
@@ -66,6 +74,33 @@ public class PaymentServiceImpl implements PaymentService {
             responseDTO.setMemberName(savedPayment.getMember().getMemberFullName());
         }
 
+        return responseDTO;
+    }
+
+    @Override
+    public PaymentDTO updatePaymentStatus(Long id, PaymentStatus paymentStatus) {
+        log.info("Execute updatePaymentStatus() for paymentId: {}, status: {}", id, paymentStatus);
+        if (id == null) {
+            throw new CustomException(400, "Payment ID cannot be null!");
+        }
+        Optional<Payment> optionalPayment = paymentRepository.findById(id);
+        if (optionalPayment.isEmpty()) {
+            throw new CustomException(404, "Payment not found with ID: " + id);
+        }
+        Payment payment = optionalPayment.get();
+        payment.setPaymentStatus(paymentStatus != null ? paymentStatus : PaymentStatus.PAID);
+        Payment savedPayment = paymentRepository.save(payment);
+        log.info("Payment #{} status updated to {}", id, savedPayment.getPaymentStatus());
+
+        PaymentDTO responseDTO = new PaymentDTO();
+        responseDTO.setPaymentId(savedPayment.getPaymentId());
+        responseDTO.setAmount(savedPayment.getAmount());
+        responseDTO.setPaymentType(savedPayment.getPaymentType());
+        responseDTO.setPaymentStatus(savedPayment.getPaymentStatus());
+        if (savedPayment.getMember() != null) {
+            responseDTO.setMemberId(savedPayment.getMember().getMemberId());
+            responseDTO.setMemberName(savedPayment.getMember().getMemberFullName());
+        }
         return responseDTO;
     }
 
