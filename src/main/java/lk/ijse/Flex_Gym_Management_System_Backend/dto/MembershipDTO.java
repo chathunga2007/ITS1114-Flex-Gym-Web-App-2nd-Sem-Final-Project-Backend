@@ -4,6 +4,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.MembershipStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @AllArgsConstructor
@@ -20,4 +21,6 @@ public class MembershipDTO {
 
     private Long packageId;
     private String packageName;
+    private BigDecimal packagePrice;
+    private int durationMonths;
 }
