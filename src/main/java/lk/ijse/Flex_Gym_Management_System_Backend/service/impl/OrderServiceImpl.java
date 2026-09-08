@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         PaymentStatus paymentStatus = orderDTO.getPaymentStatus() != null ? orderDTO.getPaymentStatus() : PaymentStatus.PENDING;
         order.setPaymentStatus(paymentStatus);
 
-        OrderStatus orderStatus = orderDTO.getOrderStatus() != null ? orderDTO.getOrderStatus() : (paymentStatus == PaymentStatus.PENDING ? OrderStatus.PENDING : OrderStatus.COMPLETED);
+        OrderStatus orderStatus = orderDTO.getOrderStatus() != null ? orderDTO.getOrderStatus() : OrderStatus.PENDING;
         order.setOrderStatus(orderStatus);
 
         BigDecimal calculatedTotal = BigDecimal.ZERO;
