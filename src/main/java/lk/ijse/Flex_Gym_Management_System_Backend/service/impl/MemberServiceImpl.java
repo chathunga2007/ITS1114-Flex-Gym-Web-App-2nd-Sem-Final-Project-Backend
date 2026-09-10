@@ -11,6 +11,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.User;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.MemberStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.UserRole;
+import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.UserStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.MemberRepository;
 import lk.ijse.Flex_Gym_Management_System_Backend.repository.UserRepository;
@@ -132,6 +133,22 @@ public class MemberServiceImpl implements MemberService {
         member.setHeightCm(memberDTO.getHeightCm());
         member.setWeightKg(memberDTO.getWeightKg());
 
+        if (memberDTO.getMemberStatus() != null) {
+            member.setMemberStatus(memberDTO.getMemberStatus());
+        }
+
+        if (member.getUser() != null) {
+            if (memberDTO.getEmail() != null && !memberDTO.getEmail().trim().isEmpty()) {
+                member.getUser().setEmail(memberDTO.getEmail().trim());
+            }
+            if (memberDTO.getMemberStatus() != null) {
+                try {
+                    member.getUser().setStatus(UserStatus.valueOf(memberDTO.getMemberStatus().name()));
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
         Member updatedMember = memberRepository.save(member);
         log.info("Member updated successfully!");
 
@@ -193,7 +210,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public List<MemberDTO> getAllActiveMembers() {
         log.info("Execute getAllActiveMembers()");
-        List<Member> memberList = memberRepository.findAllByMemberStatus(MemberStatus.ACTIVE);
+        List<Member> memberList = memberRepository.findAllByMemberStatusNot(MemberStatus.DELETED);
         List<MemberDTO> dtoList = new ArrayList<>();
 
         for (Member member : memberList) {
