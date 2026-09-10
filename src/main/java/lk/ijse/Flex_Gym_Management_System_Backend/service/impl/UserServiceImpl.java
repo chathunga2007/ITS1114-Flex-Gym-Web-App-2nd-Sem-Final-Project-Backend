@@ -113,6 +113,10 @@ public class UserServiceImpl implements UserService {
         }
         user.setUserRole(userDTO.getUserRole());
 
+        if (userDTO.getStatus() != null) {
+            user.setStatus(userDTO.getStatus());
+        }
+
         if (userDTO.getUserRole() == UserRole.ROLE_MEMBER) {
             Member member = user.getMember();
 
@@ -129,7 +133,11 @@ public class UserServiceImpl implements UserService {
             member.setHeightCm(userDTO.getMemberDTO().getHeightCm());
             member.setWeightKg(userDTO.getMemberDTO().getWeightKg());
 
-            member.setMemberStatus(MemberStatus.ACTIVE);
+            if (userDTO.getMemberDTO().getMemberStatus() != null) {
+                member.setMemberStatus(userDTO.getMemberDTO().getMemberStatus());
+            } else if (member.getMemberStatus() == null) {
+                member.setMemberStatus(MemberStatus.ACTIVE);
+            }
         } else {
             user.setMember(null);
         }
