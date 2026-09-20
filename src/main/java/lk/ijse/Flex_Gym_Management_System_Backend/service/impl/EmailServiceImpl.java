@@ -2,9 +2,11 @@ package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
 import jakarta.mail.internet.MimeMessage;
 import lk.ijse.Flex_Gym_Management_System_Backend.dto.OrderItemDTO;
+import lk.ijse.Flex_Gym_Management_System_Backend.exception.CustomException;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -153,6 +155,20 @@ public class EmailServiceImpl implements EmailService {
             log.info("Membership expired notification email sent successfully to: {}", toEmail);
         } catch (Exception e) {
             log.error("Failed to send membership expired email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendOtpEmail(String toEmail, String otp) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Flex Gym - Password Reset OTP");
+            message.setText("Your OTP for resetting your Flex Gym account password is: " + otp
+                    + "\n\nThis OTP is valid for 5 minutes.");
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new CustomException(500, "Failed to send OTP email: " + e.getMessage());
         }
     }
 }
