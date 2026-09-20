@@ -9,4 +9,5 @@ public interface EmailService {
     void sendOrderReceiptEmail(String toEmail, String memberName, Long orderId, BigDecimal totalAmount, List<OrderItemDTO> items);
     void sendMembershipExpiryReminderEmail(String toEmail, String memberName, String packageName, String expiryDate, int daysRemaining);
     void sendMembershipExpiredEmail(String toEmail, String memberName, String packageName, String expiredDate);
+    void sendOtpEmail(String toEmail, String otp);
 }
