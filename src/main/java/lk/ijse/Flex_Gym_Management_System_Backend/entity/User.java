@@ -23,6 +23,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.ACTIVE;
     private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "reset_otp")
+    private String resetOtp;
+
+    @Column(name = "otp_expiry_time")
+    private LocalDateTime otpExpiryTime;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Member member;
