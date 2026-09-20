@@ -1,9 +1,7 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.controller;
 
 import lk.ijse.Flex_Gym_Management_System_Backend.constant.CommonResponse;
-import lk.ijse.Flex_Gym_Management_System_Backend.dto.AuthDTO;
-import lk.ijse.Flex_Gym_Management_System_Backend.dto.UserDTO;
-import lk.ijse.Flex_Gym_Management_System_Backend.dto.UserDataDTO;
+import lk.ijse.Flex_Gym_Management_System_Backend.dto.*;
 import lk.ijse.Flex_Gym_Management_System_Backend.security.JwtUtil;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.UserService;
 import org.springframework.http.MediaType;
@@ -65,5 +63,23 @@ public class UserController {
         userDataDTO.setToken(token);
 
         return new CommonResponse(0, userDataDTO, "JWT Token");
+    }
+
+    @PostMapping(value = "/forgot-password", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        userService.sendForgotPasswordOtp(request);
+        return new CommonResponse(OPERATION_SUCCESS, null, "OTP has been sent to your email.");
+    }
+
+    @PostMapping(value = "/verify-otp", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse verifyOtp(@RequestBody VerifyOtpRequestDTO request) {
+        boolean verified = userService.verifyOtp(request);
+        return new CommonResponse(OPERATION_SUCCESS, verified, "OTP verified successfully.");
+    }
+
+    @PostMapping(value = "/reset-password", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        userService.resetPassword(request);
+        return new CommonResponse(OPERATION_SUCCESS, null, "Password has been reset successfully. You can now login.");
     }
 }
