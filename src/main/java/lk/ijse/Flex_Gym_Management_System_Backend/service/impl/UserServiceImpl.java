@@ -1,13 +1,14 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lk.ijse.Flex_Gym_Management_System_Backend.dto.*;
+import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
-import lk.ijse.Flex_Gym_Management_System_Backend.dto.MemberDTO;
-import lk.ijse.Flex_Gym_Management_System_Backend.dto.UserDTO;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Member;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.User;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.MemberStatus;
@@ -24,10 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Override
@@ -335,5 +338,59 @@ public class UserServiceImpl implements UserService {
             }
         }
         return userDTO;
+    }
+
+    @Override
+    public void sendForgotPasswordOtp(ForgotPasswordRequestDTO request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null) {
+            throw new CustomException(404, "User not found with email: " + request.getEmail());
+        }
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setResetOtp(otp);
+        user.setOtpExpiryTime(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        emailService.sendOtpEmail(user.getEmail(), otp);
+    }
+
+    @Override
+    public boolean verifyOtp(VerifyOtpRequestDTO request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null) {
+            throw new CustomException(404, "User not found with email: " + request.getEmail());
+        }
+
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(request.getOtp())) {
+            throw new CustomException(401, "Invalid OTP provided");
+        }
+
+        if (user.getOtpExpiryTime().isBefore(LocalDateTime.now())) {
+            throw new CustomException(400, "OTP has expired. Please request a new one");
+        }
+
+        return true;
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDTO request) {
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null) {
+            throw new CustomException(404, "User not found with email: " + request.getEmail());
+        }
+
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(request.getOtp())) {
+            throw new CustomException(401, "Invalid OTP provided");
+        }
+
+        if (user.getOtpExpiryTime().isBefore(LocalDateTime.now())) {
+            throw new CustomException(400, "OTP has expired. Please request a new one");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetOtp(null);
+        user.setOtpExpiryTime(null);
+        userRepository.save(user);
     }
 }
