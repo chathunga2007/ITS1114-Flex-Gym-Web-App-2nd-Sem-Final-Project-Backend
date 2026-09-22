@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/api/users/verify-otp",
                                 "/api/users/reset-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/saveUser").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/chatbot/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
