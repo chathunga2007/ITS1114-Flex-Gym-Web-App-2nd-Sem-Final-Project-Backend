@@ -7,11 +7,15 @@ import lk.ijse.Flex_Gym_Management_System_Backend.service.ChatbotService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.*;
 
 @Service
 public class ChatbotServiceImpl implements ChatbotService {
+
     @Value("${gemini.api.key}")
     private String apiKey;
 
@@ -21,6 +25,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final PackageRepository packageRepository;
     private final TrainerRepository trainerRepository;
     private final ProductRepository productRepository;
+    private final RestTemplate restTemplate;
 
     public ChatbotServiceImpl(PackageRepository packageRepository,
                               TrainerRepository trainerRepository,
@@ -28,6 +33,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         this.packageRepository = packageRepository;
         this.trainerRepository = trainerRepository;
         this.productRepository = productRepository;
+        this.restTemplate = new RestTemplate();
     }
 
     private String buildGymContext() {
@@ -65,8 +71,6 @@ public class ChatbotServiceImpl implements ChatbotService {
 
     @Override
     public String generateChatResponse(String userMessage) {
-//        System.out.println("Using API Key: " + apiKey);
-//        System.out.println("Using URL: " + apiUrl);
         String dbContext = buildGymContext();
 
         String systemInstruction =
@@ -79,8 +83,10 @@ public class ChatbotServiceImpl implements ChatbotService {
                         "'I apologize, but I cannot assist with that topic. I am only trained to provide information and assistance related to Flex Gym Management System and fitness services.'\n" +
                         "5. Maintain a polite, helpful, and professional tone at all times.";
 
-        RestTemplate restTemplate = new RestTemplate();
-        String fullUrl = apiUrl + "?key=" + apiKey;
+        String fullUrl = apiUrl.trim();
+        if (!fullUrl.contains("?key=")) {
+            fullUrl += "?key=" + apiKey.trim();
+        }
 
         Map<String, Object> textPart = Collections.singletonMap("text", systemInstruction + "\n\nUser Question: " + userMessage);
         Map<String, Object> contentPart = Collections.singletonMap("parts", Collections.singletonList(textPart));
@@ -91,26 +97,42 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(fullUrl, HttpMethod.POST, entity, Map.class);
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                List candidates = (List) response.getBody().get("candidates");
-                if (candidates != null && !candidates.isEmpty()) {
-                    Map firstCandidate = (Map) candidates.get(0);
-                    Map content = (Map) firstCandidate.get("content");
-                    List parts = (List) content.get("parts");
-                    Map firstPart = (Map) parts.get(0);
-                    return (String) firstPart.get("text");
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                ResponseEntity<Map> response = restTemplate.exchange(fullUrl, HttpMethod.POST, entity, Map.class);
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                    List candidates = (List) response.getBody().get("candidates");
+                    if (candidates != null && !candidates.isEmpty()) {
+                        Map firstCandidate = (Map) candidates.get(0);
+                        Map content = (Map) firstCandidate.get("content");
+                        List parts = (List) content.get("parts");
+                        Map firstPart = (Map) parts.get(0);
+                        return (String) firstPart.get("text");
+                    }
                 }
+                return "I apologize, but I am unable to generate a response at the moment.";
+
+            } catch (HttpServerErrorException.ServiceUnavailable e) {
+                System.err.println("Gemini 503 High Demand (Attempt " + attempt + "/" + maxRetries + "): " + e.getMessage());
+                if (attempt == maxRetries) {
+                    return "The AI service is currently experiencing very high demand. Please try again in a few moments.";
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignored) {}
+
+            } catch (HttpClientErrorException e) {
+                System.err.println("Gemini Client Error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
+                return "Gemini API Error (" + e.getStatusCode() + "): Please check the API URL or Key configuration.";
+
+            } catch (Exception e) {
+                System.err.println("Chatbot Service Internal Error: " + e.getMessage());
+                e.printStackTrace();
+                return "Internal Server Error: " + e.getMessage();
             }
-        }   catch (org.springframework.web.client.HttpClientErrorException e) {
-            System.err.println("Gemini API Error Response: " + e.getResponseBodyAsString());
-            e.printStackTrace();
-            return "Gemini API Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Internal Error: " + e.getMessage();
         }
-        return "I apologize, but I am unable to generate a response to this question at the moment.";
+
+        return "I apologize, but I am unable to generate a response at the moment.";
     }
 }
