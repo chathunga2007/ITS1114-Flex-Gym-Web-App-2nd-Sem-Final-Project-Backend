@@ -8,5 +8,4 @@ import java.util.List;
 
 @Repository
 public interface LockerRepository extends JpaRepository<Locker, Long> {
-    List<Locker> findAllByStatus(LockerStatus status);
 }
