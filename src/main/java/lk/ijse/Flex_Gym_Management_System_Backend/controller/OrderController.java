@@ -32,6 +32,12 @@ public class OrderController {
         return new CommonResponse(OPERATION_SUCCESS, orderDTO, SUCCESS_MESSAGE);
     }
 
+    @GetMapping(value = "/track/{trackingNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommonResponse trackOrder(@PathVariable String trackingNumber) {
+        OrderDTO orderDTO = orderService.getOrderByTrackingNumber(trackingNumber);
+        return new CommonResponse(OPERATION_SUCCESS, orderDTO, SUCCESS_MESSAGE);
+    }
+
     @GetMapping(value = "/getAllOrders", produces = MediaType.APPLICATION_JSON_VALUE)
     public CommonResponse getAllOrders() {
         List<OrderDTO> orderDTOList = orderService.getAllOrders();
@@ -49,14 +55,28 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestParam(required = false) OrderStatus orderStatus,
             @RequestParam(required = false) PaymentStatus paymentStatus,
+            @RequestParam(required = false) String courierName,
+            @RequestParam(required = false) String trackingNumber,
             @RequestBody(required = false) OrderDTO orderDTO) {
         OrderStatus finalOrderStatus = orderStatus;
         PaymentStatus finalPaymentStatus = paymentStatus;
+        String finalCourierName = courierName;
+        String finalTrackingNumber = trackingNumber;
+
         if (orderDTO != null) {
             if (finalOrderStatus == null) finalOrderStatus = orderDTO.getOrderStatus();
             if (finalPaymentStatus == null) finalPaymentStatus = orderDTO.getPaymentStatus();
+            if (finalCourierName == null) finalCourierName = orderDTO.getCourierName();
+            if (finalTrackingNumber == null) finalTrackingNumber = orderDTO.getTrackingNumber();
         }
-        OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, finalOrderStatus, finalPaymentStatus);
+
+        OrderDTO updatedOrder = orderService.updateOrderStatus(
+                orderId,
+                finalOrderStatus,
+                finalPaymentStatus,
+                finalCourierName,
+                finalTrackingNumber
+        );
         return new CommonResponse(OPERATION_SUCCESS, updatedOrder, SUCCESS_MESSAGE);
     }
 }
