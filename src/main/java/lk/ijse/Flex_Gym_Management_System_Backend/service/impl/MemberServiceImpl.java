@@ -80,6 +80,12 @@ public class MemberServiceImpl implements MemberService {
         log.info("Member profile & User account created successfully!");
 
         emailService.sendAccountCredentialsEmail(memberDTO.getEmail(), memberDTO.getMemberFullName(), rawPassword);
+        try {
+            emailService.sendWelcomeEmail(memberDTO.getEmail(), memberDTO.getMemberFullName());
+            log.info("Welcome email sent to: {}", memberDTO.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", memberDTO.getEmail(), e.getMessage());
+        }
 
         MemberDTO responseDTO = new MemberDTO();
         responseDTO.setMemberId(savedMember.getMemberId());
