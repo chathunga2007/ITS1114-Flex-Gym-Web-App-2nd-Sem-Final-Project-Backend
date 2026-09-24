@@ -1,149 +1,323 @@
-# 🏋️‍♂️ Flex Gym Management System - Backend API
+<p align="center">
+  <a href="https://github.com/chathunga2007/ITS1114-Flex-Gym-Management-System-2nd-Sem-Final-Project-Backend">
+    <img src="assets/flex-gym-logo.png" alt="Flex Gym Management System Logo" width="180" height="180" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);">
+  </a>
+</p>
 
-[![Java](https://img.shields.io/badge/Java-21-orange.svg?logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x%20%2F%204.x-brightgreen.svg?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Spring Security](https://img.shields.io/badge/Spring%20Security-JWT-blue.svg?logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security)
-[![Dotenv](https://img.shields.io/badge/.env-Supported-yellow.svg)](https://github.com/paulschwarz/spring-dotenv)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1.svg?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Maven](https://img.shields.io/badge/Build-Maven-C71A36.svg?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<h1 align="center">🏋️‍♂️ Flex Gym Management System — Enterprise REST API</h1>
 
-A robust, secure, and production-ready **RESTful API Backend** for the **Flex Gym Management System**, built using **Java 21**, **Spring Boot**, **Spring Data JPA**, **Spring Security**, **Spring Dotenv**, and **MySQL**.
+<p align="center">
+  <strong>High-Performance, Cloud-Native Fitness Center Management Engine</strong><br>
+  Built with <strong>Java 21 LTS</strong>, <strong>Spring Boot 3.x</strong>, <strong>Spring Security (JWT + RBAC)</strong>, <strong>Groq AI LPU</strong>, <strong>MySQL</strong>, and <strong>Docker</strong>.
+</p>
 
-This system centralizes and automates gym business operations, including member registrations, automated membership expiry reminders via background scheduled tasks, role-based access control (RBAC), secure OTP-based password recovery, attendance tracking via QR/ID scanning, store and POS inventory management, customized workout plan assignments, and full facility management (trainers, packages, lockers, equipment).
-
----
-
-## 📌 Table of Contents
-- [✨ Key Features](#-key-features)
-- [🛠️ Tech Stack & Dependencies](#️-tech-stack--dependencies)
-- [📁 Project Architecture & Structure](#-project-architecture--structure)
-- [⚙️ Getting Started & Installation](#️-getting-started--installation)
-  - [Prerequisites](#prerequisites)
-  - [Environment Configuration (.env)](#environment-configuration-env)
-  - [Database Setup](#database-setup)
-  - [Running the Application](#running-the-application)
-- [🔐 Security & Authentication](#-security--authentication)
-  - [Public Endpoints](#public-endpoints-permitted-without-token)
-  - [Password Recovery Workflow (OTP)](#password-recovery-workflow-otp)
-- [📡 Complete API Endpoints Reference](#-complete-api-endpoints-reference)
-  - [1. Authentication & User Management](#1-authentication--user-management)
-  - [2. Member Management](#2-member-management)
-  - [3. Membership Lifecycle & Approvals](#3-membership-lifecycle--approvals)
-  - [4. Attendance Tracking](#4-attendance-tracking)
-  - [5. Categories & Store Products](#5-categories--store-products)
-  - [6. Orders & POS](#6-orders--pos)
-  - [7. Payments & Billing](#7-payments--billing)
-  - [8. Workout Plans & Assignments](#8-workout-plans--assignments)
-  - [9. Facility & Operations (Packages, Trainers, Lockers, Equipment)](#9-facility--operations)
-- [⏰ Automated Scheduler & Email System](#-automated-scheduler--email-system)
-- [📄 Standard API Response Format](#-standard-api-response-format)
-- [👥 Authors & Acknowledgments](#-authors--acknowledgments)
+<p align="center">
+  <a href="https://adoptium.net/"><img src="https://img.shields.io/badge/Java-21%20LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"></a>
+  <a href="https://spring.io/projects/spring-security"><img src="https://img.shields.io/badge/Spring%20Security-JWT%20%7C%20RBAC-green?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"></a>
+  <a href="https://groq.com/"><img src="https://img.shields.io/badge/Groq%20AI-LPU%20Inference-f55036?style=for-the-badge&logo=fastapi&logoColor=white" alt="Groq AI"></a>
+  <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Multi--Stage%20Alpine-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License MIT"></a>
+</p>
 
 ---
 
-## ✨ Key Features
+## 📌 Executive Summary
 
-### 🔐 Authentication, Authorization & Security
-- **Stateless JWT Authentication**: Secure bearer tokens generated with custom claims, signed with HMAC-SHA, and validated on every secured request.
-- **Role-Based Access Control (RBAC)**: Support for `ROLE_ADMIN`, `ROLE_RECEPTIONIST`, `ROLE_MEMBER`, and `ROLE_TRAINER`.
-- **BCrypt Password Hashing**: Passwords stored using 12-round BCrypt encryption.
-- **Environment Variable Protection**: Integrated `spring-dotenv` to safeguard database credentials, mail passwords, and JWT secret keys from source control.
-
-### 🔑 Password Reset & OTP Verification *(New Update)*
-- **Forgot Password Flow**: Users can request a password reset by providing their registered email address.
-- **Secure 6-Digit OTP Generation**: Backend generates a random 6-digit one-time code valid for **5 minutes**.
-- **OTP Verification**: Endpoint verifies whether the submitted OTP matches and has not expired.
-- **Password Reset**: Securely updates the user password using BCrypt encoding and invalidates the OTP immediately.
-- **Automated Email Delivery**: Dispatches OTPs directly to user inboxes using Spring Mail.
-
-### 👤 Member & Membership Management
-- Member registration, profile updates, and real-time status synchronization between `Member` and `User` entities (`ACTIVE`, `INACTIVE`, `SUSPENDED`).
-- **Membership Request & Approval Workflow**: Members can submit online membership requests; Admins/Receptionists review and approve or reject them.
-- Package assignment, membership start/end dates calculation, and renewal tracking.
-
-### ⏰ Scheduled Tasks & Email Notifications
-- **Spring `@Scheduled` Cron Job** running automatically every midnight (`0 0 0 * * ?`) to detect expired memberships.
-- Automated 3-day advance **Membership Expiration Warning Emails** and **Expired Status Emails**.
-- HTML email templates with embedded styling for:
-  - Account Credentials Delivery
-  - Store Order Receipts with line-item breakdown
-  - Membership Expiration Reminders
-  - Membership Expired Notices
-  - Password Reset OTP Delivery
-
-### 📊 Attendance Tracking
-- Fast QR/ID scan endpoint (`/api/attendance/scan`) for check-ins and check-outs.
-- Member attendance history and automated monthly summary calculation.
-
-### 🛒 Gym Store, Inventory & POS
-- Product inventory categorized by supplement, accessory, gear, etc.
-- Low-stock alert threshold query (`/api/products/getLowStockAlerts?minStock=5`).
-- Complete POS order placement with automatic stock reduction, itemized bill calculation, and emailed purchase receipts.
-
-### 💳 Payment & Billing Records
-- Comprehensive payment ledger supporting `CASH`, `CARD`, and `ONLINE_TRANSFER` across memberships and store orders.
-- Dynamic payment status tracking (`PAID`, `PENDING`, `FAILED`, `REFUNDED`).
-
-### 🏋️ Workout Plans & Member Assignment
-- Customizable workout plan creation with difficulty levels (`BEGINNER`, `INTERMEDIATE`, `ADVANCED`).
-- Personalized member workout plan scheduling and tracking.
-
-### 🏢 Facility Management
-- **Trainer Management**: Trainer bio, specialization, and availability status.
-- **Package Management**: Gym subscription packages, durations, and pricing.
-- **Locker Management**: Locker allocation and state tracking (`AVAILABLE`, `OCCUPIED`, `MAINTENANCE`).
-- **Equipment Management**: Inventory tracking and maintenance scheduling (`OPERATIONAL`, `UNDER_MAINTENANCE`, `RETIRED`).
+The **Flex Gym Management System Backend** is an enterprise-grade RESTful API designed to automate and unify every tier of fitness club operations. From member lifecycle management, QR attendance tracking, point-of-sale (POS) store management, and trainer scheduling, to **Groq-accelerated AI fitness consultations** and automated email workflows, this system provides a secure, decoupled, and cloud-deployable backend architecture.
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
-
-| Technology | Purpose |
-| :--- | :--- |
-| **Java 21 (LTS)** | Core programming language |
-| **Spring Boot 3.x / 4.x** | Application framework & dependency injection |
-| **Spring Data JPA & Hibernate** | Object-relational mapping (ORM) and persistence |
-| **Spring Security** | Security filters, authentication, and authorization |
-| **JJWT (io.jsonwebtoken 0.12.3)** | JSON Web Token generation & validation |
-| **Spring Dotenv (4.0.0)** | Environment variable loading from `.env` files |
-| **MySQL 8.0+** | Relational database storage |
-| **Spring Mail (JavaMailSender)** | SMTP email dispatching |
-| **Lombok** | Boilerplate code reducer (Getters, Setters, Builders) |
-| **Apache Maven** | Build automation and dependency management |
+## 📑 Table of Contents
+1. [🌟 Recent Advancements & New Features](#-recent-advancements--new-features)
+2. [🏛️ Architectural Design & Workflows](#️-architectural-design--workflows)
+3. [🔐 Role-Based Access Control (RBAC) Matrix](#-role-based-access-control-rbac-matrix)
+4. [🛠️ Tech Stack & Key Libraries](#️-tech-stack--key-libraries)
+5. [📁 Project Architecture & Directory Layout](#-project-architecture--directory-layout)
+6. [⚙️ Getting Started & Installation](#️-getting-started--installation)
+   - [Prerequisites](#prerequisites)
+   - [Environment Configuration (.env)](#environment-configuration-env)
+   - [Database Setup](#database-setup)
+   - [Running the Application](#running-the-application)
+7. [🐳 Docker & Cloud Deployment (Render / Cloud DB)](#-docker--cloud-deployment-render--cloud-db)
+8. [📡 Complete REST API Reference (17 Modules)](#-complete-rest-api-reference-17-modules)
+   - [1. Authentication & Security](#1-authentication--security)
+   - [2. FlexBot AI Fitness Assistant (Groq LPU)](#2-flexbot-ai-fitness-assistant-groq-lpu)
+   - [3. Member Management](#3-member-management)
+   - [4. Membership Lifecycle & Approvals](#4-membership-lifecycle--approvals)
+   - [5. Personal Trainer Booking & Schedules](#5-personal-trainer-booking--schedules)
+   - [6. Fitness Progress & Body Stats Tracker](#6-fitness-progress--body-stats-tracker)
+   - [7. Attendance Tracking](#7-attendance-tracking)
+   - [8. Store Categories & Products Inventory](#8-store-categories--products-inventory)
+   - [9. Store Orders, POS & Parcel Tracking](#9-store-orders-pos--parcel-tracking)
+   - [10. Payments & Billing Records](#10-payments--billing-records)
+   - [11. Workout Plans & Assignments](#11-workout-plans--assignments)
+   - [12. Facility & Operations (Packages, Trainers, Lockers, Equipment)](#12-facility--operations)
+9. [⏰ Automated Scheduler & HTML Email Engine](#-automated-scheduler--html-email-engine)
+10. [🧪 Sample API Payloads & cURL Requests](#-sample-api-payloads--curl-requests)
+11. [📄 Unified API Response Format](#-unified-api-response-format)
+12. [👨‍💻 Developer & Project Credits](#-developer--project-credits)
 
 ---
 
-## 📁 Project Architecture & Structure
+## 🌟 Recent Advancements & New Features
 
-The project strictly adheres to a clean, layered architectural pattern:
+### 🤖 1. FlexBot — AI Fitness & Gym Assistant (Groq LPU Powered)
+- **High-Velocity Inference:** Powered by Groq's Language Processing Units (LPU) with sub-second response times.
+- **Dynamic Context Injection (RAG):** Automatically aggregates live database state (active gym packages, store supplement inventory, trainer specialties) directly into the AI system prompt.
+- **Resilient Model Failover:** Automatically queries active Groq models and switches seamlessly (`llama-3.1-8b-instant`, `llama-3.3-70b-versatile`, `mixtral-8x7b-32768`) if a candidate model is deprecated.
+- **Public Consultation Endpoint:** Available to guests and members alike at `POST /api/chatbot/ask`.
+
+### 📅 2. Personal Trainer Booking & Session Management
+- **Self-Service Booking:** Members can schedule 1-on-1 sessions with specialized personal trainers (`POST /api/bookings/create`).
+- **Trainer Dashboard & Today's Schedule:** Trainers can retrieve their daily agenda via `GET /api/bookings/trainer/{trainerId}/today`.
+- **Status Lifecycle & Feedback:** Integrated status transitions (`PENDING` ➔ `CONFIRMED` ➔ `COMPLETED` ➔ `CANCELLED`) with custom trainer feedback notes.
+
+### 📈 3. Fitness Progress & Body Metrics Tracker
+- **Comprehensive Body Tracking:** Logs weight (kg), body fat (%), muscle mass (kg), chest, waist, and arms measurements.
+- **Automated Health Analytics:** Dynamically calculates BMI, BMI categories (Underweight, Normal, Overweight, Obese), weight change delta, and milestone achievement badges.
+- **Historical Progress Timeline:** Full progression history and latest metrics query (`/api/progress/member/{memberId}/latest`).
+
+### 📦 4. Smart Order Tracking & Courier Logistics
+- **Public Parcel Tracking:** Real-time order lookup by tracking number (`GET /api/orders/track/{trackingNumber}`) without requiring authentication.
+- **Fulfillment Management:** Admin/Receptionist order status updates with courier names and external tracking identifiers.
+
+### 🐳 5. Multi-Stage Docker & Cloud Hosting Compatibility
+- **Minimalist Alpine Footprint:** Multi-stage `Dockerfile` (Maven 3.9 Temurin build ➔ Eclipse Temurin 21 JRE Alpine runner) resulting in an ultra-compact production container.
+- **Dynamic Port & Cloud Binding:** Native support for dynamic container ports (`ENV PORT=7860` / `server.port=${PORT}`) compatible with Render, Railway, AWS ECS, and Hugging Face Spaces.
+- **Cloud Database Support:** Ready for cloud MySQL instances (Aiven, TiDB Serverless, Railway, AWS RDS) with customizable SSL modes (`DB_URL`).
+
+### 🔐 6. Fine-Grained Security & Custom Exception Interceptors
+- **Strict Role-Based Authorization:** Endpoints locked down per business role (`ROLE_ADMIN`, `ROLE_RECEPTIONIST`, `ROLE_TRAINER`, `ROLE_MEMBER`).
+- **RESTful Error Interception:** Explicit JSON `401 Unauthorized` and `403 Forbidden` responses returned directly by `SecurityConfig` instead of generic container error pages.
+
+---
+
+## 🏛️ Architectural Design & Workflows
+
+### System Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Clients["Client Layer"]
+        Web["Web Frontend (HTML5 / JS / jQuery)"]
+        Mobile["Mobile & Public Clients"]
+    end
+
+    subgraph Security["Security & Interceptor Layer"]
+        CORS["CORS Filter"]
+        JWT["JwtAuthenticationFilter"]
+        RBAC["DaoAuthenticationProvider & Role Guard"]
+    end
+
+    subgraph Controllers["REST Controller Layer (17 Controllers)"]
+        AuthCtrl["User & Auth Controller"]
+        AICtrl["Chatbot Controller"]
+        MemberCtrl["Member & Membership Controller"]
+        BookingCtrl["Trainer Booking Controller"]
+        ProgressCtrl["Fitness Progress Controller"]
+        StoreCtrl["Store, POS & Order Controller"]
+        FacilityCtrl["Facility, Equipment & Lockers"]
+        SchedCtrl["Attendance & Scheduler"]
+    end
+
+    subgraph Services["Service & Business Logic Layer"]
+        AuthSvc["UserService & JwtUtil"]
+        AISvc["ChatbotService (Context RAG + Fallback)"]
+        MemberSvc["Member & MembershipService"]
+        BookingSvc["TrainerBookingService"]
+        ProgressSvc["FitnessProgressService"]
+        OrderSvc["OrderService & POS Engine"]
+        MailSvc["EmailService (JavaMailSender)"]
+        CronSvc["MembershipScheduler (@Scheduled)"]
+    end
+
+    subgraph Persistence["Data & External Integration Layer"]
+        JPA["Spring Data JPA Repositories"]
+        MySQL[(MySQL 8.0+ Database)]
+        GroqAPI["Groq LPU AI Cloud API"]
+        SMTP["SMTP Mail Server (Gmail)"]
+    end
+
+    Clients --> CORS --> JWT --> RBAC
+    RBAC --> Controllers
+    Controllers --> Services
+    Services --> JPA --> MySQL
+    AISvc -.-> GroqAPI
+    MailSvc -.-> SMTP
+    CronSvc --> MemberSvc
+    CronSvc --> MailSvc
+```
+
+---
+
+### Key Workflow Sequences
+
+#### 1. Context-Aware AI Chatbot (Groq LPU)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as User / Member
+    participant Controller as ChatbotController
+    participant Service as ChatbotServiceImpl
+    participant Repos as JPA Repositories (Packages, Products, Trainers)
+    participant Groq as Groq AI LPU Cloud API
+
+    Client->>Controller: POST /api/chatbot/ask { "message": "What supplements do you have for muscle gain?" }
+    Controller->>Service: generateChatResponse(message)
+    Service->>Repos: Fetch live packages, products, trainer bios
+    Repos-->>Service: Return current database state
+    Service->>Service: Build system prompt with live gym context
+    Service->>Groq: POST /chat/completions (model, system prompt + context, message)
+    Groq-->>Service: Ultra-fast LLM response (< 500ms)
+    Service-->>Controller: Formatted answer
+    Controller-->>Client: 200 OK with CommonResponse { data: { response: "..." } }
+```
+
+#### 2. Secure OTP Password Recovery Workflow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Member / Staff
+    participant API as Spring Boot API
+    participant DB as MySQL DB
+    participant Mail as SMTP Mail Server
+
+    User->>API: POST /api/users/forgot-password { email }
+    API->>DB: Validate user & generate random 6-digit OTP (expires in 5 min)
+    API->>Mail: Send rich HTML email with OTP
+    Mail-->>User: Delivers OTP email
+    User->>API: POST /api/users/verify-otp { email, otp }
+    API-->>User: 200 OK (OTP Validated)
+    User->>API: POST /api/users/reset-password { email, otp, newPassword }
+    API->>DB: Hash password with BCrypt (cost factor 12) & clear OTP
+    API-->>User: 200 OK (Password updated successfully)
+```
+
+#### 3. Midnight Membership Expiration Cron Engine
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Cron as Spring Scheduler (@Scheduled midnight)
+    participant Svc as MembershipScheduler
+    participant DB as MySQL Database
+    participant Mail as EmailService
+
+    Cron->>Svc: Trigger processMembershipExpirations() at 00:00:00
+    Svc->>DB: Query memberships expiring in 3 days
+    loop For Each Expiring Membership
+        Svc->>Mail: Send 3-day renewal warning email
+    end
+    Svc->>DB: Query memberships with endDate <= TODAY and status ACTIVE
+    loop For Each Expired Membership
+        Svc->>DB: Update membership status to EXPIRED
+        Svc->>Mail: Send membership expired alert email
+    end
+    Svc-->>Cron: Batch run completed
+```
+
+---
+
+## 🔐 Role-Based Access Control (RBAC) Matrix
+
+The system implements strict URL and HTTP-method security constraints:
+
+| Module / Scope | Endpoints | Public | `ROLE_MEMBER` | `ROLE_TRAINER` | `ROLE_RECEPTIONIST` | `ROLE_ADMIN` |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Authentication** | `/api/users/login`, `/saveUser`, `/forgot-password`, `/verify-otp`, `/reset-password` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **User Administration** | `/api/users/getAllUsers`, `/deleteUser/**` | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Profile Settings** | `/api/users/getUser/**`, `/updateUser` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **AI Assistant** | `/api/chatbot/**` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Public Catalog** | `GET /api/products/**`, `/categories/**`, `/packages/**`, `/trainers/**` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Order Tracking** | `GET /api/orders/track/**` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Catalog Management** | `POST/PUT/DELETE /api/packages/**`, `/products/**`, `/categories/**`, `/trainers/**` | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Equipment & Assets** | `/api/equipments/**` | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Membership Approvals** | `/api/memberships/approveMembership/**`, `/rejectMembership/**`, `/getAllPendingMemberships` | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Front Desk POS & Orders**| `/api/orders/getAllOrders`, `/updateOrderStatus/**`, `/payments/getAllPayments` | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Attendance Scanning** | `POST /api/attendance/scan` | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Attendance Reports** | `GET /api/attendance/getAllLogs` | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Workout Design** | `/api/workout-plans/saveWorkoutPlan`, `/updateWorkoutPlan` | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Trainer Bookings** | `POST /api/bookings/create`, `GET /member/**`, `PUT /update-status/**` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Trainer Today Agenda** | `GET /api/bookings/trainer/**` | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **All Bookings Overview**| `GET /api/bookings/all` | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Fitness Progress** | `/api/progress/**` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Order Placement (POS)**| `POST /api/orders/placeOrder` | ❌ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## 🛠️ Tech Stack & Key Libraries
+
+| Component | Technology | Version | Description |
+| :--- | :--- | :--- | :--- |
+| **Platform** | **Java** | `21 (LTS)` | Virtual threads & modern language features |
+| **Framework** | **Spring Boot** | `3.4.x / 4.x` | Enterprise application architecture |
+| **Security** | **Spring Security** | `6.x` | Stateless filter chains, BCrypt & RBAC |
+| **Tokens** | **JJWT (io.jsonwebtoken)** | `0.12.3` | Cryptographically signed JSON Web Tokens |
+| **AI Engine** | **Groq Cloud API** | `OpenAI Compat` | Sub-second LPU inference (`llama-3.1-8b-instant`) |
+| **Database** | **MySQL Server** | `8.0+` | Relational storage & ACID transactions |
+| **Persistence**| **Spring Data JPA** | Hibernate ORM | Declarative data repositories & query derivation |
+| **Config Guard**| **Spring Dotenv** | `4.0.0` | 12-Factor App `.env` credential isolation |
+| **Mailing** | **Spring Mail (JavaMailSender)**| SMTP | Rich HTML email dispatching |
+| **Container** | **Docker** | Multi-Stage | Minimal Eclipse Temurin 21 Alpine image |
+| **Build Tool** | **Apache Maven** | `3.9+` | Dependency lifecycle & automated builds |
+| **Utilities** | **Project Lombok** | Latest | Automated getters, setters, builders, loggers |
+
+---
+
+## 📁 Project Architecture & Directory Layout
 
 ```text
 Flex-Gym-Management-System-Backend/
+├── assets/
+│   └── flex-gym-logo.png                # Official Flex Gym branding asset
 ├── src/
 │   ├── main/
 │   │   ├── java/lk/ijse/Flex_Gym_Management_System_Backend/
-│   │   │   ├── constant/         # API responses & status codes (CommonResponse, Messages)
-│   │   │   ├── controller/       # REST API Controllers (14 Controllers)
-│   │   │   ├── dto/              # Data Transfer Objects (Requests & Responses)
-│   │   │   ├── entity/           # JPA Entities (Hibernate ORM models)
-│   │   │   ├── enumeration/      # Enums for statuses, roles, and payment types
-│   │   │   ├── exception/        # Global exception handler & custom exceptions
-│   │   │   ├── repository/       # Spring Data JPA Repositories
-│   │   │   ├── scheduler/        # Background cron jobs (MembershipScheduler)
-│   │   │   ├── security/         # SecurityConfig, JwtUtil, JwtAuthenticationFilter
-│   │   │   ├── service/          # Business logic interfaces
-│   │   │   │   └── impl/         # Service implementations
-│   │   │   └── FlexGymManagementSystemBackendApplication.java
+│   │   │   ├── constant/                # CommonResponse & HTTP Response constants
+│   │   │   ├── controller/              # 17 REST API Controllers
+│   │   │   │   ├── AttendanceController.java
+│   │   │   │   ├── CategoryController.java
+│   │   │   │   ├── ChatbotController.java            # AI Assistant endpoint
+│   │   │   │   ├── EquipmentController.java
+│   │   │   │   ├── FitnessProgressController.java    # Body stats & BMI tracking
+│   │   │   │   ├── LockerController.java
+│   │   │   │   ├── MemberController.java
+│   │   │   │   ├── MemberWorkoutPlanController.java
+│   │   │   │   ├── MembershipController.java
+│   │   │   │   ├── OrderController.java              # Orders & parcel tracking
+│   │   │   │   ├── PackageController.java
+│   │   │   │   ├── PaymentController.java
+│   │   │   │   ├── ProductController.java
+│   │   │   │   ├── TrainerBookingController.java     # Personal trainer sessions
+│   │   │   │   ├── TrainerController.java
+│   │   │   │   ├── UserController.java               # Auth & OTP password reset
+│   │   │   │   └── WorkoutPlanController.java
+│   │   │   ├── dto/                     # Data Transfer Objects (Payloads & Responses)
+│   │   │   ├── entity/                  # JPA Entities (Hibernate database models)
+│   │   │   ├── enumeration/             # Type-safe Enums (Roles, Statuses, Payment types)
+│   │   │   ├── exception/               # Global AppExceptionHandler & custom exceptions
+│   │   │   ├── repository/              # Spring Data JPA Repository interfaces
+│   │   │   ├── scheduler/               # MembershipScheduler (Midnight Cron job)
+│   │   │   ├── security/                # SecurityConfig, JwtUtil, JwtAuthenticationFilter
+│   │   │   └── service/                 # Business logic interfaces
+│   │   │       └── impl/                # Robust service implementations (Groq AI, etc.)
 │   │   └── resources/
-│   │       ├── css/              # External CSS for email templates (style.css)
-│   │       ├── html/             # Rich HTML email templates
-│   │       └── application.properties # Main application configuration (reads from .env)
-│   └── test/                     # Unit and integration test suites
-├── .env.example                  # Sample environment configuration template
-├── .gitignore                    # Git ignore rules (protects .env and build files)
-├── pom.xml                       # Maven build configuration
-└── README.md                     # Project documentation
+│   │       ├── css/style.css            # Styles for rich HTML email notifications
+│   │       ├── html/                    # 5 Rich HTML Email Templates
+│   │       │   ├── credentials-email.html
+│   │       │   ├── membership-expired-email.html
+│   │       │   ├── membership-reminder-email.html
+│   │       │   ├── order-receipt.html
+│   │       │   └── password-reset-otp.html
+│   │       └── application.properties   # Dynamic configuration powered by .env
+│   └── test/                            # Spring Boot test suites
+├── .dockerignore                         # Docker build optimization exclusions
+├── .env.example                         # Environment variable template
+├── .gitignore                           # Git ignore rules (protects credentials & binaries)
+├── Dockerfile                           # Production multi-stage Alpine Dockerfile
+├── pom.xml                              # Maven project descriptors & dependencies
+└── README.md                            # Comprehensive project documentation
 ```
 
 ---
@@ -151,375 +325,420 @@ Flex-Gym-Management-System-Backend/
 ## ⚙️ Getting Started & Installation
 
 ### Prerequisites
-Make sure you have the following installed on your machine:
-- **JDK 21** or later ([Download OpenJDK / Oracle JDK](https://adoptium.net/))
-- **MySQL Server 8.0+** ([Download MySQL](https://dev.mysql.com/downloads/))
-- **Apache Maven 3.9+** (or use the included `./mvnw` wrapper)
+- **JDK 21 (LTS)** or higher ([Adoptium Temurin](https://adoptium.net/))
+- **MySQL Server 8.0+** ([MySQL Community Server](https://dev.mysql.com/downloads/mysql/))
+- **Apache Maven 3.9+** (or use the packaged `./mvnw` / `mvnw.cmd`)
 - **Git**
 
 ---
 
 ### Environment Configuration (.env)
 
-The application uses **`spring-dotenv`** to securely manage environment variables without exposing sensitive credentials in `application.properties`.
+The project leverages `spring-dotenv` to safeguard sensitive secrets.
 
-1. Copy `.env.example` to create your own `.env` file in the project root:
+1. **Create your `.env` file** from the provided template:
    ```bash
    cp .env.example .env
    ```
    *(On Windows PowerShell: `Copy-Item .env.example .env`)*
 
-2. Open `.env` and fill in your actual credentials:
+2. **Configure your `.env` values:**
    ```env
-   # Database Configuration (MySQL)
+   # ==========================================
+   # DATABASE CONFIGURATION
+   # ==========================================
+   # Local MySQL:
+   DB_URL=jdbc:mysql://localhost:3306/flex_gym_management_system?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
    DB_USERNAME=root
    DB_PASSWORD=your_mysql_password
 
-   # SMTP Mail Configuration (Gmail)
+   # Or Cloud Database (Aiven / TiDB / Railway):
+   # DB_URL=jdbc:mysql://your-cloud-host:3306/defaultdb?sslMode=VERIFY_IDENTITY
+
+   # ==========================================
+   # SPRING MAIL (SMTP - Gmail)
+   # ==========================================
+   # Use a 16-character Google App Password (not your primary Gmail password)
    MAIL_USERNAME=your_email@gmail.com
-   MAIL_PASSWORD=your_google_app_password
+   MAIL_PASSWORD=your_16_char_google_app_password
 
-   # JWT Security Secret
-   JWT_SECRET=your_super_secret_jwt_key_here_minimum_256_bits
+   # ==========================================
+   # JWT SECURITY CONFIGURATION
+   # ==========================================
+   # Minimum 256-bit secure key
+   JWT_SECRET=your_super_secret_jwt_key_at_least_256_bits_long_random_string
+
+   # ==========================================
+   # GROQ AI ASSISTANT (100% Free at console.groq.com)
+   # ==========================================
+   GROQ_API_KEY=gsk_your_groq_api_key_here
+   GROQ_MODEL=llama-3.1-8b-instant
+   GROQ_API_URL=https://api.groq.com/openai/v1/chat/completions
    ```
-
-> ⚠️ **IMPORTANT**: Never commit your `.env` file to version control. It is already added to `.gitignore`.
 
 ---
 
 ### Database Setup
 
-1. Open your MySQL client (MySQL Workbench, phpMyAdmin, DBeaver, or CLI).
-2. Create the database:
+1. Log into your MySQL console or client (DataGrip, Workbench, CLI):
    ```sql
    CREATE DATABASE IF NOT EXISTS flex_gym_management_system;
    ```
-3. Hibernate will automatically create or update the required database tables on the first run (`spring.jpa.hibernate.ddl-auto=update`).
+2. Hibernate's `ddl-auto=update` will generate all schema tables, foreign key constraints, and relational indices automatically upon first launch.
 
 ---
 
 ### Running the Application
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/chathunga2007/ITS1114-Flex-Gym-Management-System-2nd-Sem-Final-Project-Backend.git
-   cd Flex-Gym-Management-System-Backend
-   ```
+```bash
+# 1. Clone repository
+git clone https://github.com/chathunga2007/ITS1114-Flex-Gym-Management-System-2nd-Sem-Final-Project-Backend.git
+cd Flex-Gym-Management-System-Backend
 
-2. **Build and package the project:**
-   ```bash
-   ./mvnw clean install
-   ```
+# 2. Build project
+./mvnw clean install -DskipTests
 
-3. **Run the Spring Boot application:**
-   - **Using Maven Wrapper:**
-     ```bash
-     ./mvnw spring-boot:run
-     ```
-   - **Using JAR file:**
-     ```bash
-     java -jar target/Flex-Gym-Management-System-Backend-0.0.1-SNAPSHOT.jar
-     ```
+# 3. Launch Spring Boot Server
+./mvnw spring-boot:run
+```
 
-The backend server starts on port `8080` by default: `http://localhost:8080`.
+*(On Windows PowerShell, run `.\mvnw.cmd spring-boot:run`)*
+
+The server will start listening at: **`http://localhost:8080`**.
 
 ---
 
-## 🔐 Security & Authentication
+## 🐳 Docker & Cloud Deployment (Render / Cloud DB)
 
-All private endpoints require a valid JWT Bearer token in the `Authorization` request header:
+### 1. Build and Run with Docker Locally
 
-```http
-Authorization: Bearer <your_jwt_token_here>
+```bash
+# Build production Docker image
+docker build -t flex-gym-backend .
+
+# Run container passing .env variables
+docker run -d \
+  -p 8080:7860 \
+  --env-file .env \
+  -e PORT=7860 \
+  --name flex-gym-backend-container \
+  flex-gym-backend
 ```
 
-### Public Endpoints (Permitted without Token)
-The following endpoints are public and do not require an `Authorization` header:
-- `POST /api/users/login` — User authentication and JWT retrieval
-- `POST /api/users/saveUser` — New user registration
-- `POST /api/users/forgot-password` — Request password reset OTP
-- `POST /api/users/verify-otp` — Verify password reset OTP
-- `POST /api/users/reset-password` — Reset password using verified OTP
+### 2. Deploying on Render (Web Service)
+1. Fork or push this repository to GitHub.
+2. Create a new **Web Service** on [Render](https://render.com/).
+3. Choose **Docker Runtime**.
+4. In the **Environment Variables** tab on Render, add:
+   - `DB_URL`: Your cloud MySQL JDBC URL (e.g., Aiven or TiDB)
+   - `DB_USERNAME`: Database username
+   - `DB_PASSWORD`: Database password
+   - `JWT_SECRET`: 256-bit random security string
+   - `MAIL_USERNAME`: Gmail address
+   - `MAIL_PASSWORD`: Google App Password
+   - `GROQ_API_KEY`: Groq API key (`gsk_...`)
+   - `GROQ_MODEL`: `llama-3.1-8b-instant`
+5. Render automatically builds the multi-stage Docker container and exposes the API.
 
 ---
 
-### Password Recovery Workflow (OTP)
+## 📡 Complete REST API Reference (17 Modules)
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Backend as Spring Boot API
-    participant DB as MySQL DB
-    participant Mail as SMTP Mail Server
-
-    User->>Backend: POST /api/users/forgot-password { email }
-    Backend->>DB: Find user & generate 6-digit OTP (expiry 5 mins)
-    Backend->>Mail: Send OTP Email
-    Mail-->>User: Delivers OTP code
-    User->>Backend: POST /api/users/verify-otp { email, otp }
-    Backend-->>User: OTP Verified (Valid)
-    User->>Backend: POST /api/users/reset-password { email, otp, newPassword }
-    Backend->>DB: BCrypt encode new password & clear OTP
-    Backend-->>User: Password Reset Successful!
-```
-
-#### 1. Forgot Password Request
-`POST /api/users/forgot-password`
-```json
-{
-  "email": "member@gmail.com"
-}
-```
-
-#### 2. Verify OTP
-`POST /api/users/verify-otp`
-```json
-{
-  "email": "member@gmail.com",
-  "otp": "492810"
-}
-```
-
-#### 3. Reset Password
-`POST /api/users/reset-password`
-```json
-{
-  "email": "member@gmail.com",
-  "otp": "492810",
-  "newPassword": "MyNewSecurePassword@123"
-}
-```
-
----
-
-## 📡 Complete API Endpoints Reference
-
-### 1. Authentication & User Management
+### 1. Authentication & Security
 **Base Path:** `/api/users`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/login` | Authenticate user & receive JWT Token | ❌ No |
-| `POST` | `/saveUser` | Register a new user | ❌ No |
-| `POST` | `/forgot-password` | Generate & email 6-digit password reset OTP (valid 5 mins) | ❌ No |
-| `POST` | `/verify-otp` | Verify 6-digit OTP code | ❌ No |
-| `POST` | `/reset-password` | Reset password using verified OTP | ❌ No |
-| `PUT` | `/updateUser` | Update existing user details | ✅ Yes |
-| `DELETE` | `/deleteUser/{userId}` | Delete user by ID | ✅ Yes |
-| `GET` | `/getAllUsers` | Retrieve all registered users | ✅ Yes |
-| `GET` | `/getUser/{userId}` | Get single user profile by ID | ✅ Yes |
+| `POST` | `/login` | Authenticate user & receive JWT Bearer token | `PUBLIC` |
+| `POST` | `/saveUser` | Register a new user | `PUBLIC` |
+| `POST` | `/forgot-password` | Send 6-digit OTP code to registered email | `PUBLIC` |
+| `POST` | `/verify-otp` | Validate submitted 6-digit OTP | `PUBLIC` |
+| `POST` | `/reset-password` | Set new password using verified OTP | `PUBLIC` |
+| `GET` | `/getUser/{userId}` | Retrieve user profile details | `AUTHENTICATED` |
+| `PUT` | `/updateUser` | Update user profile information | `AUTHENTICATED` |
+| `GET` | `/getAllUsers` | Retrieve all registered users | `ROLE_ADMIN` |
+| `DELETE` | `/deleteUser/{userId}` | Delete user account by ID | `ROLE_ADMIN` |
 
 ---
 
-### 2. Member Management
+### 2. FlexBot AI Fitness Assistant (Groq LPU)
+**Base Path:** `/api/chatbot`
+
+| Method | Endpoint | Description | Permission |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/ask` | Ask FlexBot fitness, package, product or routine questions | `PUBLIC` |
+
+---
+
+### 3. Member Management
 **Base Path:** `/api/members`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/saveMember` | Register a new gym member | ✅ Yes |
-| `PUT` | `/updateMember/{memberId}` | Update member profile and status | ✅ Yes |
-| `DELETE` | `/deleteMember/{memberId}` | Deactivate / soft delete member | ✅ Yes |
-| `GET` | `/getAllMembers` | Retrieve all active gym members | ✅ Yes |
-| `GET` | `/getMember/{memberId}` | Get member profile by ID | ✅ Yes |
+| `POST` | `/saveMember` | Register new member profile | `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/updateMember/{memberId}` | Update member profile | `AUTHENTICATED` |
+| `GET` | `/getMember/{memberId}` | Get member profile by ID | `AUTHENTICATED` |
+| `GET` | `/getAllMembers` | List all registered members | `ADMIN`, `RECEPTIONIST`, `TRAINER` |
+| `DELETE` | `/deleteMember/{memberId}` | Soft delete/deactivate member | `ROLE_ADMIN` |
 
 ---
 
-### 3. Membership Lifecycle & Approvals
+### 4. Membership Lifecycle & Approvals
 **Base Path:** `/api/memberships`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/saveMembership` | Direct create membership (Admin/Receptionist) | ✅ Yes |
-| `POST` | `/requestMembership` | Online membership self-request by member | ✅ Yes |
-| `PUT` | `/approveMembership/{membershipId}` | Approve pending membership request | ✅ Yes |
-| `PUT` | `/rejectMembership/{membershipId}` | Reject pending membership request | ✅ Yes |
-| `GET` | `/getAllPendingMemberships` | List all pending membership requests | ✅ Yes |
-| `GET` | `/getAllMemberships` | List all active memberships | ✅ Yes |
-| `GET` | `/getMembership/{membershipId}` | Retrieve membership details by ID | ✅ Yes |
-| `GET` | `/getMembershipsByMember/{memberId}` | List all memberships of a specific member | ✅ Yes |
-| `PUT` | `/updateMembership/{membershipId}` | Update membership dates/details | ✅ Yes |
-| `DELETE` | `/deleteMembership/{membershipId}` | Delete membership record | ✅ Yes |
-| `POST` | `/run-expiry-check` | Manually trigger membership expiration check batch | ✅ Yes |
+| `POST` | `/requestMembership` | Member online self-request for subscription | `AUTHENTICATED` |
+| `POST` | `/saveMembership` | Direct create membership | `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/approveMembership/{id}` | Approve pending membership request | `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/rejectMembership/{id}` | Reject pending membership request | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getAllPendingMemberships` | Retrieve list of pending memberships | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getAllMemberships` | List all active memberships | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getMembership/{id}` | Retrieve membership by ID | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getMembershipsByMember/{memberId}` | Get all memberships of specific member | `AUTHENTICATED` |
+| `PUT` | `/updateMembership/{id}` | Update membership validity dates | `ADMIN`, `RECEPTIONIST` |
+| `DELETE` | `/deleteMembership/{id}` | Remove membership record | `ROLE_ADMIN` |
+| `POST` | `/run-expiry-check` | Manually invoke midnight expiry check batch | `ADMIN`, `RECEPTIONIST` |
 
 ---
 
-### 4. Attendance Tracking
+### 5. Personal Trainer Booking & Schedules
+**Base Path:** `/api/bookings`
+
+| Method | Endpoint | Description | Permission |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/create` | Book 1-on-1 personal training session | `AUTHENTICATED` |
+| `GET` | `/member/{memberId}` | Get booking history of member | `AUTHENTICATED` |
+| `GET` | `/trainer/{trainerId}` | Get all bookings of a trainer | `ADMIN`, `TRAINER` |
+| `GET` | `/trainer/{trainerId}/today` | Get today's scheduled training sessions | `ADMIN`, `TRAINER` |
+| `GET` | `/all` | Retrieve all gym personal training bookings | `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/update-status/{bookingId}` | Update status (`CONFIRMED`, `COMPLETED`, `CANCELLED`) & feedback | `AUTHENTICATED` |
+
+---
+
+### 6. Fitness Progress & Body Stats Tracker
+**Base Path:** `/api/progress`
+
+| Method | Endpoint | Description | Permission |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/log` | Record body stats (weight, body fat %, muscle mass, measurements) | `AUTHENTICATED` |
+| `GET` | `/member/{memberId}` | Retrieve comprehensive fitness progress history | `AUTHENTICATED` |
+| `GET` | `/member/{memberId}/latest` | Retrieve latest recorded fitness stats & BMI | `AUTHENTICATED` |
+| `DELETE` | `/{progressId}` | Delete a specific progress record entry | `AUTHENTICATED` |
+
+---
+
+### 7. Attendance Tracking
 **Base Path:** `/api/attendance`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/scan` | Fast QR/ID scan to record check-in/check-out | ✅ Yes |
-| `GET` | `/getAllLogs` | Retrieve all attendance check-in logs | ✅ Yes |
-| `GET` | `/getMemberAttendance/{memberId}` | Retrieve attendance logs for a member | ✅ Yes |
-| `GET` | `/getMonthlySummary/{memberId}/{year}/{month}` | Get monthly attendance count summary | ✅ Yes |
+| `POST` | `/scan` | Fast QR/Barcode scan check-in / check-out | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getAllLogs` | Retrieve all gym entry/exit logs | `ADMIN`, `RECEPTIONIST`, `TRAINER` |
+| `GET` | `/getMemberAttendance/{memberId}` | Retrieve attendance logs for a member | `AUTHENTICATED` |
+| `GET` | `/getMonthlySummary/{memberId}/{year}/{month}` | Monthly attendance breakdown | `AUTHENTICATED` |
 
 ---
 
-### 5. Categories & Store Products
+### 8. Store Categories & Products Inventory
 **Base Paths:** `/api/categories` & `/api/products`
 
-#### Categories (`/api/categories`)
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/saveCategory` | Create a new product category | ✅ Yes |
-| `PUT` | `/updateCategory` | Update category details | ✅ Yes |
-| `GET` | `/getCategory/{categoryId}` | Get category by ID | ✅ Yes |
-| `GET` | `/getAllCategories` | List all active product categories | ✅ Yes |
-| `DELETE` | `/deleteCategory/{categoryId}` | Delete product category | ✅ Yes |
-
-#### Products (`/api/products`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/saveProduct` | Add new product to inventory | ✅ Yes |
-| `PUT` | `/updateProduct` | Update product details & stock | ✅ Yes |
-| `GET` | `/getProduct/{productId}` | Get product details by ID | ✅ Yes |
-| `GET` | `/getAllProducts` | List all active products | ✅ Yes |
-| `GET` | `/getProductsByCategory/{categoryId}` | Filter products by category | ✅ Yes |
-| `GET` | `/getLowStockAlerts?minStock=5` | Check low-stock inventory alerts | ✅ Yes |
-| `DELETE` | `/deleteProduct/{productId}` | Delete product from inventory | ✅ Yes |
+| `GET` | `/api/categories/**` | List categories (supplements, gear, apparel) | `PUBLIC` |
+| `POST` | `/api/categories/saveCategory` | Create product category | `ROLE_ADMIN` |
+| `PUT` | `/api/categories/updateCategory` | Update category details | `ROLE_ADMIN` |
+| `DELETE` | `/api/categories/deleteCategory/{id}` | Delete category | `ROLE_ADMIN` |
+| `GET` | `/api/products/**` | Browse product catalog & filters | `PUBLIC` |
+| `GET` | `/api/products/getLowStockAlerts?minStock=5` | Query low-stock alerts | `ADMIN`, `RECEPTIONIST` |
+| `POST` | `/api/products/saveProduct` | Add new product & initial stock | `ROLE_ADMIN` |
+| `PUT` | `/api/products/updateProduct` | Update product details & price | `ROLE_ADMIN` |
+| `DELETE` | `/api/products/deleteProduct/{id}` | Delete product | `ROLE_ADMIN` |
 
 ---
 
-### 6. Orders & POS
+### 9. Store Orders, POS & Parcel Tracking
 **Base Path:** `/api/orders`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/placeOrder` | Place new order & auto-send HTML receipt email | ✅ Yes |
-| `GET` | `/getOrder/{orderId}` | Get order details with itemized list | ✅ Yes |
-| `GET` | `/getAllOrders` | Retrieve all store orders | ✅ Yes |
-| `GET` | `/getMemberOrders/{memberId}` | Get all orders placed by a member | ✅ Yes |
-| `PUT` | `/updateOrderStatus/{orderId}` | Update order status and payment status | ✅ Yes |
+| `GET` | `/track/{trackingNumber}` | Public lookup order status & courier details | `PUBLIC` |
+| `POST` | `/placeOrder` | Place POS order, reduce stock & auto-email receipt | `AUTHENTICATED` |
+| `GET` | `/getOrder/{orderId}` | Get order details with itemized list | `AUTHENTICATED` |
+| `GET` | `/getMemberOrders/{memberId}` | Get order history of member | `AUTHENTICATED` |
+| `GET` | `/getAllOrders` | Retrieve all store orders | `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/updateOrderStatus/{orderId}` | Update order status, courier & tracking number | `ADMIN`, `RECEPTIONIST` |
 
 ---
 
-### 7. Payments & Billing
+### 10. Payments & Billing Records
 **Base Path:** `/api/payments`
 
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/savePayment` | Record new payment transaction | ✅ Yes |
-| `PUT` | `/updatePaymentStatus/{id}?paymentStatus=PAID` | Update payment status | ✅ Yes |
-| `GET` | `/getPayment/{id}` | Get payment by ID | ✅ Yes |
-| `GET` | `/getAllPayments` | List all payment transactions | ✅ Yes |
-| `GET` | `/getPaymentsByMember/{memberId}` | List payment history of a member | ✅ Yes |
-| `DELETE` | `/deletePayment/{id}` | Delete payment transaction | ✅ Yes |
+| `POST` | `/savePayment` | Record new transaction (`CASH`, `CARD`, `ONLINE_TRANSFER`)| `ADMIN`, `RECEPTIONIST` |
+| `PUT` | `/updatePaymentStatus/{id}?paymentStatus=PAID` | Update payment state | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getPayment/{id}` | Retrieve payment invoice by ID | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getAllPayments` | View complete payment ledger | `ADMIN`, `RECEPTIONIST` |
+| `GET` | `/getPaymentsByMember/{memberId}` | View member payment history | `AUTHENTICATED` |
+| `DELETE` | `/deletePayment/{id}` | Remove payment transaction | `ROLE_ADMIN` |
 
 ---
 
-### 8. Workout Plans & Assignments
+### 11. Workout Plans & Assignments
 **Base Paths:** `/api/workout-plans` & `/api/member-workout-plans`
 
-#### Workout Plan Templates (`/api/workout-plans`)
-| Method | Endpoint | Description | Auth Required |
+| Method | Endpoint | Description | Permission |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/saveWorkoutPlan` | Create workout plan template | ✅ Yes |
-| `PUT` | `/updateWorkoutPlan` | Update workout plan template | ✅ Yes |
-| `GET` | `/getWorkoutPlan/{planId}` | Get workout plan by ID | ✅ Yes |
-| `GET` | `/getAllWorkoutPlans` | List all workout plan templates | ✅ Yes |
-| `DELETE` | `/deleteWorkoutPlan/{planId}` | Delete workout plan template | ✅ Yes |
-
-#### Member Workout Plan Assignments (`/api/member-workout-plans`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/assignPlan` | Assign workout plan to member | ✅ Yes |
-| `PUT` | `/updatePlan` | Update member workout assignment | ✅ Yes |
-| `GET` | `/getPlan/{id}` | Get member workout plan assignment by ID | ✅ Yes |
-| `GET` | `/getAllPlans` | List all member workout plan assignments | ✅ Yes |
-| `DELETE` | `/deletePlan/{id}` | Remove workout assignment | ✅ Yes |
+| `GET` | `/api/workout-plans/**` | View workout plan routines | `PUBLIC` |
+| `POST` | `/api/workout-plans/saveWorkoutPlan` | Create workout plan template | `ADMIN`, `TRAINER` |
+| `PUT` | `/api/workout-plans/updateWorkoutPlan` | Edit workout plan template | `ADMIN`, `TRAINER` |
+| `DELETE` | `/api/workout-plans/deleteWorkoutPlan/{id}` | Delete plan template | `ROLE_ADMIN` |
+| `POST` | `/api/member-workout-plans/assignPlan` | Assign workout plan to member | `AUTHENTICATED` |
+| `PUT` | `/api/member-workout-plans/updatePlan` | Modify assigned member workout routine | `ADMIN`, `TRAINER` |
+| `GET` | `/api/member-workout-plans/getPlan/{id}` | Get member assigned plan | `AUTHENTICATED` |
+| `GET` | `/api/member-workout-plans/getAllPlans` | List all member assigned routines | `AUTHENTICATED` |
+| `DELETE` | `/api/member-workout-plans/deletePlan/{id}` | Revoke member workout assignment | `ROLE_ADMIN` |
 
 ---
 
-### 9. Facility & Operations
+### 12. Facility & Operations
 **Base Paths:** `/api/packages`, `/api/trainers`, `/api/lockers`, `/api/equipments`
 
-#### Membership Packages (`/api/packages`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/savePackage` | Create membership package plan | ✅ Yes |
-| `PUT` | `/updatePackage` | Update package plan details | ✅ Yes |
-| `GET` | `/getPackage/{packageId}` | Get package by ID | ✅ Yes |
-| `GET` | `/getAllPackages` | List all available packages | ✅ Yes |
-| `DELETE` | `/deletePackage/{packageId}` | Delete membership package | ✅ Yes |
-
-#### Trainers (`/api/trainers`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/saveTrainer` | Register trainer profile | ✅ Yes |
-| `PUT` | `/updateTrainer` | Update trainer details | ✅ Yes |
-| `GET` | `/getTrainer/{trainerId}` | Get trainer details by ID | ✅ Yes |
-| `GET` | `/getAllTrainers` | List all trainers | ✅ Yes |
-| `DELETE` | `/deleteTrainer/{trainerId}` | Delete trainer record | ✅ Yes |
-
-#### Lockers (`/api/lockers`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/saveLocker` | Add new locker | ✅ Yes |
-| `PUT` | `/updateLocker` | Update locker details/status | ✅ Yes |
-| `GET` | `/getLocker/{lockerId}` | Get locker details by ID | ✅ Yes |
-| `GET` | `/getAllLockers` | List all lockers | ✅ Yes |
-| `DELETE` | `/deleteLocker/{lockerId}` | Delete locker | ✅ Yes |
-
-#### Equipment (`/api/equipments`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/saveEquipment` | Add gym machinery/equipment | ✅ Yes |
-| `PUT` | `/updateEquipment` | Update equipment status/details | ✅ Yes |
-| `GET` | `/getEquipment/{equipmentId}` | Get equipment by ID | ✅ Yes |
-| `GET` | `/getAllEquipments` | List all gym equipment | ✅ Yes |
-| `DELETE` | `/deleteEquipment/{equipmentId}` | Delete equipment record | ✅ Yes |
+| Module | Method | Endpoint | Description | Permission |
+| :--- | :--- | :--- | :--- | :---: |
+| **Packages** | `GET` | `/api/packages/**` | View membership packages | `PUBLIC` |
+| | `POST/PUT/DELETE`| `/api/packages/**` | Manage package plans & pricing | `ROLE_ADMIN` |
+| **Trainers** | `GET` | `/api/trainers/**` | View trainer bios & specializations | `PUBLIC` |
+| | `POST/PUT/DELETE`| `/api/trainers/**` | Manage gym trainers | `ROLE_ADMIN` |
+| **Lockers** | `POST` | `/api/lockers/saveLocker` | Register locker | `ADMIN`, `RECEPTIONIST` |
+| | `PUT` | `/api/lockers/updateLocker` | Update locker assignment/state | `AUTHENTICATED` |
+| | `GET` | `/api/lockers/**` | View lockers | `AUTHENTICATED` |
+| | `DELETE` | `/api/lockers/deleteLocker/{id}` | Remove locker | `ROLE_ADMIN` |
+| **Equipment**| `POST/PUT/GET` | `/api/equipments/**` | Manage gym machinery & maintenance | `ROLE_ADMIN` |
+| | `DELETE` | `/api/equipments/deleteEquipment/{id}`| Remove equipment asset | `ROLE_ADMIN` |
 
 ---
 
-## ⏰ Automated Scheduler & Email System
+## ⏰ Automated Scheduler & HTML Email Engine
 
-### 1. Membership Expiry Automation
-The system runs `MembershipScheduler.java` automatically every day at midnight (`0 0 0 * * ?`):
-- **3 Days Prior:** Sends an automated reminder email advising the member to renew.
-- **On Expiry Date:** Automatically updates membership status to `EXPIRED` and sends an expiration notification email.
+### 1. Daily Midnight Cron Schedule
+Configured in `MembershipScheduler.java` via Spring `@Scheduled(cron = "0 0 0 * * ?")`:
+1. **3 Days Before Expiry:** Identifies memberships expiring in exactly 3 days and dispatches a friendly renewal notification email.
+2. **On Expiry Date:** Automatically updates status from `ACTIVE` to `EXPIRED` and delivers the final membership expiration notice.
+3. **Manual Trigger:** Frontend admins can trigger an on-demand check cycle via `POST /api/memberships/run-expiry-check`.
 
-### 2. Email Notifications
-Dispatched using Spring Mail (`JavaMailSender`) with custom styling and templates located in `src/main/resources/html/`:
-- **Password Reset OTP Email**: Sends the 6-digit verification code for forgotten passwords.
-- **Credentials Delivery Email** (`credentials-email.html`): Welcome email with login credentials for new accounts.
-- **Store Order Receipt** (`order-receipt.html`): POS store purchase receipt with itemized summary table.
-- **Membership Reminder Email** (`membership-reminder-email.html`): Expiry warning with remaining days count.
-- **Membership Expired Email** (`membership-expired-email.html`): Final expiration notice and renewal instructions.
+### 2. High-Fidelity HTML Email Templates
+Stored in `src/main/resources/html/` with CSS styling:
+- **🔑 Password Reset OTP (`password-reset-otp.html`):** 6-digit PIN with a 5-minute security countdown warning.
+- **✉️ Welcome & Credentials (`credentials-email.html`):** Delivers username, default password, and portal links.
+- **🧾 Store POS Receipt (`order-receipt.html`):** Formatted itemized table with subtotal, discounts, and payment confirmation.
+- **⏳ Expiration Warning (`membership-reminder-email.html`):** Urgent reminder with remaining days badge.
+- **🚫 Expiration Notice (`membership-expired-email.html`):** Notice informing member that facility access is paused.
 
 ---
 
-## 📄 Standard API Response Format
+## 🧪 Sample API Payloads & cURL Requests
 
-All API endpoints return responses encapsulated within the `CommonResponse` structure:
+### 1. User Authentication (Login)
+```bash
+curl -X POST http://localhost:8080/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin@flexgym.com",
+    "password": "AdminPassword@123"
+  }'
+```
+
+### 2. Ask FlexBot AI Assistant
+```bash
+curl -X POST http://localhost:8080/api/chatbot/ask \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What membership package is best for a student on a budget, and who trains powerlifting?"
+  }'
+```
+
+### 3. Book a Personal Trainer Session
+```bash
+curl -X POST http://localhost:8080/api/bookings/create \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "memberId": 1,
+    "trainerId": 2,
+    "sessionDate": "2026-10-01",
+    "timeSlot": "09:00 AM - 10:30 AM",
+    "focusArea": "Hypertrophy & Bench Press Form",
+    "memberNotes": "Recovering from a mild shoulder strain."
+  }'
+```
+
+### 4. Log Fitness Progress & Body Stats
+```bash
+curl -X POST http://localhost:8080/api/progress/log \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "memberId": 1,
+    "recordDate": "2026-09-25",
+    "weightKg": 74.5,
+    "bodyFatPercentage": 14.8,
+    "muscleMassKg": 38.2,
+    "chestCm": 102.0,
+    "waistCm": 78.5,
+    "armsCm": 38.0,
+    "notes": "Feeling strong, increased bench PR to 95kg."
+  }'
+```
+
+### 5. Track Store Parcel (Public)
+```bash
+curl -X GET http://localhost:8080/api/orders/track/TRK-FLEX-98231
+```
+
+---
+
+## 📄 Unified API Response Format
+
+All responses strictly follow the standardized `CommonResponse` contract:
 
 ```json
 {
   "code": 200,
   "data": {
-    "userId": 1,
-    "email": "user@flexgym.com",
-    "userRole": "ROLE_ADMIN"
+    "bookingId": 12,
+    "status": "CONFIRMED",
+    "sessionDate": "2026-10-01"
   },
-  "message": "Operation Successful"
+  "message": "Personal training session booked successfully!"
 }
 ```
 
-### Standard Status Codes:
-- `200` (`OPERATION_SUCCESS`): Action completed successfully.
-- `400`: Bad Request / Validation error / Expired OTP.
-- `401`: Unauthorized / Invalid OTP.
-- `404`: Resource not found (e.g. User or Member not found).
-- `500`: Internal application error handled gracefully by `AppExceptionHandler`.
+### Status Code Standards
+- **`200` (`OPERATION_SUCCESS`):** Request completed successfully.
+- **`400` (`BAD_REQUEST`):** Validation failure or expired/invalid OTP token.
+- **`401` (`UNAUTHORIZED`):** Invalid credentials or missing JWT token.
+- **`403` (`FORBIDDEN`):** Role does not possess sufficient privileges.
+- **`404` (`NOT_FOUND`):** Resource does not exist in the database.
+- **`500` (`INTERNAL_SERVER_ERROR`):** Handled gracefully with clean payload via `AppExceptionHandler`.
 
 ---
 
-## 👥 Authors & Acknowledgments
+## 👨‍💻 Developer & Project Credits
 
-- **Developer:** [Chathunga Bimsara](https://github.com/chathunga2007)
-- **Institution / Program:** IJSE (Institute of Software Engineering) - 2nd Semester Final Project
-- **Project:** Flex Gym Management System
+<p align="center">
+  <img src="assets/flex-gym-logo.png" alt="Flex Gym Brand" width="90" style="border-radius: 50%;">
+</p>
+
+- **Lead Developer:** **Chathunga Bimsara**
+- **GitHub:** [@chathunga2007](https://github.com/chathunga2007)
+- **Email:** `wggachathungabimsara2007@gmail.com`
+- **Institution:** **IJSE (Institute of Software Engineering)**
+- **Curriculum:** Higher Diploma in Software Engineering (HDSE) — *2nd Semester Final Project (ITS1114)*
 
 ---
 
-<p align="center">Made with ❤️ for modern gym and fitness center management.</p>
+<p align="center">
+  <sub>Flex Gym Management System — Engineered with passion for world-class fitness administration.</sub>
+</p>
