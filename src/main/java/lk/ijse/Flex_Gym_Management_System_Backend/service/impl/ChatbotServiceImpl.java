@@ -1,31 +1,51 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
-import lk.ijse.Flex_Gym_Management_System_Backend.repository.PackageRepository;
-import lk.ijse.Flex_Gym_Management_System_Backend.repository.ProductRepository;
-import lk.ijse.Flex_Gym_Management_System_Backend.repository.TrainerRepository;
-import lk.ijse.Flex_Gym_Management_System_Backend.service.ChatbotService;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.*;
+import lk.ijse.Flex_Gym_Management_System_Backend.repository.PackageRepository;
+import lk.ijse.Flex_Gym_Management_System_Backend.repository.ProductRepository;
+import lk.ijse.Flex_Gym_Management_System_Backend.repository.TrainerRepository;
+import lk.ijse.Flex_Gym_Management_System_Backend.service.ChatbotService;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ChatbotServiceImpl implements ChatbotService {
+    @Value("${groq.api.key:${GROK_API_KEY:}}")
+    private String rawApiKey;
 
-    @Value("${gemini.api.key}")
-    private String apiKey;
+    @Value("${groq.api.url:${GROK_API_URL:https://api.groq.com/openai/v1/chat/completions}}")
+    private String rawApiUrl;
 
-    @Value("${gemini.api.url}")
-    private String apiUrl;
+    @Value("${groq.model:${GROK_MODEL:llama-3.1-8b-instant}}")
+    private String rawModel;
 
     private final PackageRepository packageRepository;
     private final TrainerRepository trainerRepository;
     private final ProductRepository productRepository;
     private final RestTemplate restTemplate;
+
+    private static volatile String activeWorkingModel = null;
+
+    private static final List<String> FALLBACK_MODELS = List.of(
+            "llama-3.1-8b-instant",
+            "llama-3.2-3b-preview",
+            "llama-3.2-1b-preview",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it",
+            "llama-3.3-70b-versatile"
+    );
 
     public ChatbotServiceImpl(PackageRepository packageRepository,
                               TrainerRepository trainerRepository,
@@ -33,7 +53,11 @@ public class ChatbotServiceImpl implements ChatbotService {
         this.packageRepository = packageRepository;
         this.trainerRepository = trainerRepository;
         this.productRepository = productRepository;
-        this.restTemplate = new RestTemplate();
+
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(8000);
+        requestFactory.setReadTimeout(15000);
+        this.restTemplate = new RestTemplate(requestFactory);
     }
 
     private String buildGymContext() {
@@ -63,76 +87,181 @@ public class ChatbotServiceImpl implements ChatbotService {
                             t.getSpecialization() != null ? t.getSpecialization() : "General"))
             );
         } catch (Exception ex) {
-            System.err.println("Error reading DB for context: " + ex.getMessage());
+            log.error("Error reading DB for gym context: {}", ex.getMessage());
         }
 
         return sb.toString();
     }
 
-    @Override
-    public String generateChatResponse(String userMessage) {
-        String dbContext = buildGymContext();
-
-        String systemInstruction =
-                "You are the official AI Assistant of Flex Gym Management System.\n\n" +
-                        "MANDATORY INSTRUCTIONS:\n" +
-                        "1. Respond STRICTLY and ONLY in ENGLISH, regardless of the language used by the user.\n" +
-                        "2. Answer ONLY questions related to Flex Gym, including memberships, packages, products, trainers, gym services, workouts, and fitness.\n" +
-                        "3. Use the following real-time database context to answer accurately: \n" + dbContext + "\n" +
-                        "4. If the user asks ANY question outside of Flex Gym or fitness (e.g., general programming, politics, movies, random trivia), you MUST STRICTLY decline by saying:\n" +
-                        "'I apologize, but I cannot assist with that topic. I am only trained to provide information and assistance related to Flex Gym Management System and fitness services.'\n" +
-                        "5. Maintain a polite, helpful, and professional tone at all times.";
-
-        String fullUrl = apiUrl.trim();
-        if (!fullUrl.contains("?key=")) {
-            fullUrl += "?key=" + apiKey.trim();
+    private String resolveBestModel(String apiKey, String preferredModel, String apiUrl) {
+        if (activeWorkingModel != null) {
+            return activeWorkingModel;
         }
 
-        Map<String, Object> textPart = Collections.singletonMap("text", systemInstruction + "\n\nUser Question: " + userMessage);
-        Map<String, Object> contentPart = Collections.singletonMap("parts", Collections.singletonList(textPart));
-        Map<String, Object> requestBody = Collections.singletonMap("contents", Collections.singletonList(contentPart));
+        try {
+            String modelsEndpoint = apiUrl.contains("/chat/completions")
+                    ? apiUrl.replace("/chat/completions", "/models")
+                    : "https://api.groq.com/openai/v1/models";
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(apiKey);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    modelsEndpoint,
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object dataObj = response.getBody().get("data");
+                if (dataObj instanceof List<?> dataList) {
+                    List<String> availableModelIds = new ArrayList<>();
+                    for (Object item : dataList) {
+                        if (item instanceof Map<?, ?> itemMap) {
+                            Object id = itemMap.get("id");
+                            if (id instanceof String idStr) {
+                                if (!idStr.contains("whisper") && !idStr.contains("guard") && !idStr.contains("embed")) {
+                                    availableModelIds.add(idStr);
+                                }
+                            }
+                        }
+                    }
+
+                    log.info("Discovered active Groq models: {}", availableModelIds);
+
+                    if (preferredModel != null && availableModelIds.contains(preferredModel)) {
+                        activeWorkingModel = preferredModel;
+                        return activeWorkingModel;
+                    }
+
+                    for (String candidate : FALLBACK_MODELS) {
+                        if (availableModelIds.contains(candidate)) {
+                            activeWorkingModel = candidate;
+                            log.info("Automatically selected verified Groq model: {}", candidate);
+                            return activeWorkingModel;
+                        }
+                    }
+
+                    if (!availableModelIds.isEmpty()) {
+                        activeWorkingModel = availableModelIds.get(0);
+                        log.info("Automatically selected available Groq model: {}", activeWorkingModel);
+                        return activeWorkingModel;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not query /models endpoint ({}). Falling back to preferred or default model.", e.getMessage());
+        }
+
+        return (preferredModel != null && !preferredModel.isBlank()) ? preferredModel : "llama-3.1-8b-instant";
+    }
+
+    private String sendChatRequest(String apiUrl, String apiKey, String model, List<Map<String, String>> messages) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", messages);
+        requestBody.put("temperature", 0.3);
+        requestBody.put("stream", false);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        int maxRetries = 3;
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                ResponseEntity<Map> response = restTemplate.exchange(fullUrl, HttpMethod.POST, entity, Map.class);
-                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                    List candidates = (List) response.getBody().get("candidates");
-                    if (candidates != null && !candidates.isEmpty()) {
-                        Map firstCandidate = (Map) candidates.get(0);
-                        Map content = (Map) firstCandidate.get("content");
-                        List parts = (List) content.get("parts");
-                        Map firstPart = (Map) parts.get(0);
-                        return (String) firstPart.get("text");
-                    }
+        ResponseEntity<Map> response = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.POST,
+                entity,
+                Map.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            List choices = (List) response.getBody().get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map firstChoice = (Map) choices.get(0);
+                Map message = (Map) firstChoice.get("message");
+                if (message != null && message.get("content") != null) {
+                    activeWorkingModel = model;
+                    return (String) message.get("content");
                 }
-                return "I apologize, but I am unable to generate a response at the moment.";
-
-            } catch (HttpServerErrorException.ServiceUnavailable e) {
-                System.err.println("Gemini 503 High Demand (Attempt " + attempt + "/" + maxRetries + "): " + e.getMessage());
-                if (attempt == maxRetries) {
-                    return "The AI service is currently experiencing very high demand. Please try again in a few moments.";
-                }
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ignored) {}
-
-            } catch (HttpClientErrorException e) {
-                System.err.println("Gemini Client Error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
-                return "Gemini API Error (" + e.getStatusCode() + "): Please check the API URL or Key configuration.";
-
-            } catch (Exception e) {
-                System.err.println("Chatbot Service Internal Error: " + e.getMessage());
-                e.printStackTrace();
-                return "Internal Server Error: " + e.getMessage();
             }
         }
+        return null;
+    }
 
-        return "I apologize, but I am unable to generate a response at the moment.";
+    @Override
+    public String generateChatResponse(String userMessage) {
+        if (rawApiKey == null || rawApiKey.trim().isEmpty()) {
+            return "AI Assistant is not configured yet. Please get a free API key from https://console.groq.com and paste it in the backend .env file as GROQ_API_KEY.";
+        }
+
+        String apiKey = rawApiKey.trim();
+        String apiUrl = (rawApiUrl != null && !rawApiUrl.isBlank()) ? rawApiUrl.trim() : "https://api.groq.com/openai/v1/chat/completions";
+        String requestedModel = (rawModel != null && !rawModel.isBlank()) ? rawModel.trim() : "llama-3.1-8b-instant";
+
+        if (apiKey.startsWith("gsk_")) {
+            apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+        }
+
+        String dbContext = buildGymContext();
+
+        String systemInstruction =
+                "You are FlexBot, the official high-performance AI fitness assistant for Flex Gym.\n\n" +
+                        "GUIDELINES:\n" +
+                        "1. Answer ONLY questions related to Flex Gym, fitness, workouts, nutrition, memberships, packages, trainers, and store products.\n" +
+                        "2. Utilize the real-time database context below to provide accurate answers:\n" + dbContext + "\n" +
+                        "3. If asked about unrelated topics (such as general politics, unrelated coding, celebrity gossip, etc.), politely decline by saying: 'I apologize, but I am solely dedicated to answering questions about Flex Gym and your fitness journey.'\n" +
+                        "4. Be energetic, motivating, concise, and professional in English.";
+
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content", systemInstruction));
+        messages.add(Map.of("role", "user", "content", userMessage));
+
+        String modelToUse = resolveBestModel(apiKey, requestedModel, apiUrl);
+
+        try {
+            String answer = sendChatRequest(apiUrl, apiKey, modelToUse, messages);
+            if (answer != null) {
+                return answer;
+            }
+            return "I apologize, but I am unable to generate a response at the moment.";
+
+        } catch (HttpClientErrorException e) {
+            log.error("AI API Client Error ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                return "API Error: Invalid or expired API key. Please check your GROQ_API_KEY in .env.";
+            }
+
+            // If model is not found, automatically attempt fallback models
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND && e.getResponseBodyAsString().contains("model")) {
+                log.warn("Model '{}' returned 404 Not Found. Trying fallback candidate models...", modelToUse);
+                activeWorkingModel = null;
+                for (String fallback : FALLBACK_MODELS) {
+                    if (fallback.equals(modelToUse)) continue;
+                    try {
+                        log.info("Attempting fallback model: {}", fallback);
+                        String fallbackAnswer = sendChatRequest(apiUrl, apiKey, fallback, messages);
+                        if (fallbackAnswer != null) {
+                            activeWorkingModel = fallback;
+                            log.info("Fallback succeeded with model: {}", fallback);
+                            return fallbackAnswer;
+                        }
+                    } catch (Exception ex) {
+                        log.debug("Fallback model {} failed: {}", fallback, ex.getMessage());
+                    }
+                }
+            }
+
+            return "AI API returned an error (" + e.getStatusCode() + "). Please verify your API key or model settings.";
+        } catch (HttpServerErrorException e) {
+            log.error("AI API Server Error: {}", e.getMessage());
+            return "AI Service is temporarily experiencing heavy load. Please try again in a few moments.";
+        } catch (Exception e) {
+            log.error("Chatbot unexpected error: {}", e.getMessage());
+            return "Unable to connect to AI assistant. Please check your internet connection or server logs.";
+        }
     }
 }
