@@ -159,6 +159,135 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendOrderDispatchedEmail(String toEmail, String memberName, Long orderId, String trackingNumber, String courierName, String estimatedDelivery) {
+        log.info("Sending order dispatched email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - Order #" + orderId + " Dispatched (" + trackingNumber + ")");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = "";
+            try {
+                cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            } catch (Exception ignored) {}
+
+            ClassPathResource htmlResource = new ClassPathResource("html/order-dispatched.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent)
+                    .replace("[[memberName]]", memberName != null ? memberName : "Customer")
+                    .replace("[[orderId]]", String.valueOf(orderId))
+                    .replace("[[trackingNumber]]", trackingNumber != null ? trackingNumber : "N/A")
+                    .replace("[[courierName]]", courierName != null ? courierName : "Flex Express Logistics")
+                    .replace("[[estimatedDelivery]]", estimatedDelivery != null ? estimatedDelivery : "2-4 Business Days");
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            log.info("Order dispatched email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send order dispatched email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendOrderDeliveredEmail(String toEmail, String memberName, Long orderId) {
+        sendOrderDeliveredEmail(toEmail, memberName, orderId, "FLX-TRK-" + orderId + "920", "Flex Express Logistics");
+    }
+
+    @Override
+    public void sendOrderDeliveredEmail(String toEmail, String memberName, Long orderId, String trackingNumber, String courierName) {
+        log.info("Sending styled order delivered HTML email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - Order #" + orderId + " Delivered Successfully! 🎉");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = "";
+            try {
+                cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            } catch (Exception ignored) {}
+
+            ClassPathResource htmlResource = new ClassPathResource("html/order-delivered.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent)
+                    .replace("[[memberName]]", memberName != null ? memberName : "Valued Member")
+                    .replace("[[orderId]]", String.valueOf(orderId))
+                    .replace("[[trackingNumber]]", trackingNumber != null ? trackingNumber : ("FLX-TRK-" + orderId + "920"))
+                    .replace("[[courierName]]", courierName != null ? courierName : "Flex Express Logistics");
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            log.info("Styled order delivered HTML email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send styled order delivered email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendWelcomeEmail(String toEmail, String memberName) {
+        log.info("Sending welcome email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to Flex Gym! Train Hard. Live Strong.");
+
+            ClassPathResource cssResource = new ClassPathResource("css/style.css");
+            String cssContent = "";
+            try {
+                cssContent = new String(cssResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            } catch (Exception ignored) {}
+
+            ClassPathResource htmlResource = new ClassPathResource("html/welcome-email.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[styleContent]]", cssContent)
+                    .replace("[[memberName]]", memberName != null ? memberName : "Member");
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            log.info("Welcome email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendBookingConfirmationEmail(String toEmail, String memberName, String trainerName, String sessionDate, String timeSlot, String focusArea) {
+        log.info("Sending PT booking confirmation HTML email to: {}", toEmail);
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Flex Gym - PT Session Confirmed with " + (trainerName != null ? trainerName : "Your Coach") + " 🏋️‍♂️");
+
+            ClassPathResource htmlResource = new ClassPathResource("html/booking-confirmation.html");
+            String htmlContent = new String(htmlResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            htmlContent = htmlContent.replace("[[memberName]]", memberName != null ? memberName : "Valued Member")
+                    .replace("[[trainerName]]", trainerName != null ? trainerName : "Certified Coach")
+                    .replace("[[sessionDate]]", sessionDate != null ? sessionDate : "Scheduled Date")
+                    .replace("[[timeSlot]]", timeSlot != null ? timeSlot : "Reserved Slot")
+                    .replace("[[focusArea]]", focusArea != null ? focusArea : "Full Body Fitness");
+
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            log.info("PT booking confirmation email successfully sent to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send PT booking confirmation email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    @Override
     public void sendOtpEmail(String toEmail, String otp) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
