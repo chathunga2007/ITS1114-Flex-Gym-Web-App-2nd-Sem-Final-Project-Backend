@@ -16,8 +16,8 @@ WORKDIR /app
 # Copy executable jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Render exposes dynamic port via $PORT
-ENV PORT=8080
-EXPOSE 8080
+# Hugging Face Spaces uses port 7860 by default
+ENV PORT=7860
+EXPOSE 7860
 
 ENTRYPOINT ["sh", "-c", "java -jar app.jar --server.port=${PORT}"]
