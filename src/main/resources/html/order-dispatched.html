@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex Gym - Order Delivered</title>
+    <style>
+        [[styleContent]]
+    </style>
+</head>
+<body style="background-color: #0b0f19; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #f3f4f6;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0b0f19; padding: 35px 15px;">
+    <tr>
+        <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <!-- Header Banner -->
+                <tr>
+                    <td style="background: linear-gradient(135deg, #111827 0%, #1a2234 100%); padding: 36px 30px 24px; text-align: center; border-bottom: 3px solid #ccff00;">
+                        <div style="display: inline-block; padding: 8px 16px; background: rgba(204,255,0,0.1); border: 1px solid rgba(204,255,0,0.3); border-radius: 999px; margin-bottom: 12px;">
+                            <span style="color: #ccff00; font-size: 13px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;">FLEX FITNESS CLUB</span>
+                        </div>
+                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: 0.5px;">Order Delivered Successfully!</h1>
+                        <p style="margin: 8px 0 0; color: #9ca3af; font-size: 14px;">Your fitness package has reached its destination 🎉</p>
+                    </td>
+                </tr>
+
+                <!-- Hero Delivered Badge -->
+                <tr>
+                    <td style="padding: 28px 32px 10px; text-align: center;">
+                        <div style="display: inline-block; width: 64px; height: 64px; line-height: 64px; border-radius: 50%; background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; color: #22c55e; font-size: 30px; margin-bottom: 12px;">
+                            ✓
+                        </div>
+                        <h2 style="margin: 0 0 6px; font-size: 18px; color: #ffffff; font-weight: 700;">Package Safely Handed Over</h2>
+                        <p style="margin: 0; color: #9ca3af; font-size: 13px;">Confirmed by courier delivery agent</p>
+                    </td>
+                </tr>
+
+                <!-- Content Area -->
+                <tr>
+                    <td style="padding: 20px 32px 30px;">
+                        <p style="color: #e5e7eb; font-size: 15px; line-height: 1.6; margin-top: 0;">
+                            Hello <strong style="color: #ffffff;">[[memberName]]</strong>,
+                        </p>
+                        <p style="color: #9ca3af; font-size: 14px; line-height: 1.6;">
+                            Awesome news! Your Flex Gym order <strong style="color: #ccff00; font-family: monospace;">#ORD-[[orderId]]</strong> has been successfully delivered. We hope you are excited to take your workouts to the next level with your new authentic gear &amp; nutrition!
+                        </p>
+
+                        <!-- Order Summary Card -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1a2234; border: 1px solid #2d3748; border-radius: 10px; margin: 20px 0; overflow: hidden;">
+                            <tr>
+                                <td style="padding: 14px 18px; border-bottom: 1px solid #2d3748;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="color: #9ca3af; font-size: 13px;">Order Reference:</td>
+                                            <td align="right" style="color: #ffffff; font-weight: 700; font-family: monospace; font-size: 14px;">#ORD-[[orderId]]</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 14px 18px; border-bottom: 1px solid #2d3748;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="color: #9ca3af; font-size: 13px;">Delivery Status:</td>
+                                            <td align="right">
+                                                <span style="background-color: #15803d; color: #dcfce7; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                    ✓ Delivered
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 14px 18px; border-bottom: 1px solid #2d3748;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="color: #9ca3af; font-size: 13px;">Courier Partner:</td>
+                                            <td align="right" style="color: #ffffff; font-size: 13px; font-weight: 600;">[[courierName]]</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 14px 18px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="color: #9ca3af; font-size: 13px;">Tracking Code:</td>
+                                            <td align="right" style="color: #ccff00; font-family: monospace; font-weight: 700; font-size: 13px;">[[trackingNumber]]</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Motivational Workout Box -->
+                        <div style="background: rgba(204,255,0,0.06); border-left: 4px solid #ccff00; border-radius: 6px; padding: 14px 16px; margin: 22px 0;">
+                            <p style="margin: 0; color: #e5e7eb; font-size: 13px; line-height: 1.5;">
+                                💡 <strong>Trainer's Tip:</strong> Please inspect your items upon unboxing. Remember to store protein and supplements in a cool, dry place away from direct sunlight. Stay hydrated and stay relentless!
+                            </p>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <div style="text-align: center; margin: 30px 0 10px;">
+                            <a href="http://localhost:5500/member-dashboard.html#orders" style="display: inline-block; background-color: #ccff00; color: #000000; text-decoration: none; font-weight: 800; font-size: 14px; padding: 13px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(204,255,0,0.3);">
+                                View Order &amp; Invoice →
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Support & Assistance -->
+                <tr>
+                    <td style="background-color: #0d131f; padding: 18px 32px; border-top: 1px solid #1f2937; text-align: center;">
+                        <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.5;">
+                            Have an issue with your delivered items? Reply directly to this email or chat with our 24/7 AI coach <strong style="color: #ccff00;">FlexBot</strong> on our portal.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #090d16; padding: 22px 30px; text-align: center; color: #6b7280; font-size: 11px;">
+                        <p style="margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1.5px; color: #9ca3af; font-weight: 700;">Train Harder &bull; Live Stronger</p>
+                        <p style="margin: 0;">&copy; 2026 Flex Gym Fitness Club. All rights reserved.</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
