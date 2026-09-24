@@ -80,6 +80,20 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         log.info("User saved!");
 
+        // Send Welcome Email
+        try {
+            String memberName = "Valued Member";
+            if (userDTO.getMemberDTO() != null && userDTO.getMemberDTO().getMemberFullName() != null && !userDTO.getMemberDTO().getMemberFullName().isBlank()) {
+                memberName = userDTO.getMemberDTO().getMemberFullName();
+            } else if (savedUser.getMember() != null && savedUser.getMember().getMemberFullName() != null) {
+                memberName = savedUser.getMember().getMemberFullName();
+            }
+            emailService.sendWelcomeEmail(savedUser.getEmail(), memberName);
+            log.info("Welcome email sent to: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", savedUser.getEmail(), e.getMessage());
+        }
+
         userDTO.setUserId(savedUser.getUserId());
         return userDTO;
     }
