@@ -8,7 +8,9 @@ import java.util.List;
 public interface OrderService {
     OrderDTO placeOrder(OrderDTO orderDTO);
     OrderDTO getOrderById(Long orderId);
+    OrderDTO getOrderByTrackingNumber(String trackingNumber);
     List<OrderDTO> getAllOrders();
     List<OrderDTO> getOrdersByMemberId(Long memberId);
     OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus, PaymentStatus paymentStatus);
+    OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus, PaymentStatus paymentStatus, String courierName, String trackingNumber);
 }
