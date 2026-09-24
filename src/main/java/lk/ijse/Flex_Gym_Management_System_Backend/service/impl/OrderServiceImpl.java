@@ -1,10 +1,12 @@
 package lk.ijse.Flex_Gym_Management_System_Backend.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import lk.ijse.Flex_Gym_Management_System_Backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -16,6 +18,7 @@ import lk.ijse.Flex_Gym_Management_System_Backend.entity.OrderItem;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Payment;
 import lk.ijse.Flex_Gym_Management_System_Backend.entity.Product;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.OrderStatus;
+import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentMethod;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentStatus;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.PaymentType;
 import lk.ijse.Flex_Gym_Management_System_Backend.enumeration.ProductStatus;
@@ -69,11 +72,37 @@ public class OrderServiceImpl implements OrderService {
         order.setMember(member);
         order.setOrderDate(LocalDateTime.now());
 
-        PaymentStatus paymentStatus = orderDTO.getPaymentStatus() != null ? orderDTO.getPaymentStatus() : PaymentStatus.PENDING;
-        order.setPaymentStatus(paymentStatus);
+        PaymentMethod paymentMethod = orderDTO.getPaymentMethod() != null ? orderDTO.getPaymentMethod() : PaymentMethod.CASH_ON_DELIVERY;
+        order.setPaymentMethod(paymentMethod);
 
-        OrderStatus orderStatus = orderDTO.getOrderStatus() != null ? orderDTO.getOrderStatus() : OrderStatus.PENDING;
+        PaymentStatus paymentStatus;
+        OrderStatus orderStatus;
+
+        if (paymentMethod == PaymentMethod.CREDIT_CARD) {
+            paymentStatus = PaymentStatus.PAID;
+            orderStatus = OrderStatus.CONFIRMED;
+        } else {
+            paymentStatus = orderDTO.getPaymentStatus() != null ? orderDTO.getPaymentStatus() : PaymentStatus.PENDING;
+            orderStatus = orderDTO.getOrderStatus() != null ? orderDTO.getOrderStatus() : OrderStatus.PENDING;
+        }
+
+        order.setPaymentStatus(paymentStatus);
         order.setOrderStatus(orderStatus);
+
+        order.setShippingAddress(orderDTO.getShippingAddress() != null ? orderDTO.getShippingAddress() : member.getMemberFullName() + " Address");
+        order.setDeliveryCity(orderDTO.getDeliveryCity() != null ? orderDTO.getDeliveryCity() : "Colombo");
+        order.setPostalCode(orderDTO.getPostalCode() != null ? orderDTO.getPostalCode() : "00300");
+        order.setContactPhone(orderDTO.getContactPhone() != null ? orderDTO.getContactPhone() : member.getMemberPhoneNumber());
+        order.setOrderNotes(orderDTO.getOrderNotes());
+        order.setCardLast4(orderDTO.getCardLast4());
+        order.setCardBrand(orderDTO.getCardBrand());
+
+        // Generate tracking number e.g., FLX-TRK-784920
+        int randSuffix = 100000 + new Random().nextInt(900000);
+        String trackingNumber = "FLX-TRK-" + randSuffix;
+        order.setTrackingNumber(trackingNumber);
+        order.setCourierName(orderDTO.getCourierName() != null ? orderDTO.getCourierName() : "Flex Express Logistics");
+        order.setEstimatedDeliveryDate(LocalDate.now().plusDays(3));
 
         BigDecimal calculatedTotal = BigDecimal.ZERO;
         List<OrderItem> orderItemList = new ArrayList<>();
@@ -128,28 +157,7 @@ public class OrderServiceImpl implements OrderService {
         paymentRepository.save(payment);
         log.info("Automatic Shop Order Payment saved successfully!");
 
-        OrderDTO responseDTO = new OrderDTO();
-        responseDTO.setOrderId(savedOrder.getOrderId());
-        responseDTO.setMemberId(savedOrder.getMember().getMemberId());
-        responseDTO.setMemberFullName(savedOrder.getMember().getMemberFullName());
-        responseDTO.setTotalAmount(savedOrder.getTotalAmount());
-        responseDTO.setOrderDate(savedOrder.getOrderDate());
-        responseDTO.setOrderStatus(savedOrder.getOrderStatus());
-        responseDTO.setPaymentStatus(savedOrder.getPaymentStatus());
-
-        List<OrderItemDTO> itemDTOs = new ArrayList<>();
-        if (savedOrder.getOrderItems() != null) {
-            for (OrderItem item : savedOrder.getOrderItems()) {
-                OrderItemDTO itemDTO = new OrderItemDTO();
-                itemDTO.setOrderItemId(item.getOrderItemId());
-                itemDTO.setProductId(item.getProduct().getProductId());
-                itemDTO.setProductName(item.getProduct().getProductName());
-                itemDTO.setQuantity(item.getQuantity());
-                itemDTO.setUnitPrice(item.getUnitPrice());
-                itemDTOs.add(itemDTO);
-            }
-        }
-        responseDTO.setItems(itemDTOs);
+        OrderDTO responseDTO = mapToDTO(savedOrder);
 
         try {
             String memberEmail = null;
@@ -163,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
                         member.getMemberFullName(),
                         savedOrder.getOrderId(),
                         savedOrder.getTotalAmount(),
-                        itemDTOs
+                        responseDTO.getItems()
                 );
                 log.info("Order receipt email triggered successfully for member: " + member.getMemberFullName());
             }
@@ -184,32 +192,20 @@ public class OrderServiceImpl implements OrderService {
         if (optionalOrder.isEmpty()) {
             throw new CustomException(404, "Order not found with ID: " + orderId);
         }
-        Order order = optionalOrder.get();
+        return mapToDTO(optionalOrder.get());
+    }
 
-        OrderDTO responseDTO = new OrderDTO();
-        responseDTO.setOrderId(order.getOrderId());
-        responseDTO.setMemberId(order.getMember().getMemberId());
-        responseDTO.setMemberFullName(order.getMember().getMemberFullName());
-        responseDTO.setTotalAmount(order.getTotalAmount());
-        responseDTO.setOrderDate(order.getOrderDate());
-        responseDTO.setOrderStatus(order.getOrderStatus());
-        responseDTO.setPaymentStatus(order.getPaymentStatus());
-
-        List<OrderItemDTO> itemDTOs = new ArrayList<>();
-        if (order.getOrderItems() != null) {
-            for (OrderItem item : order.getOrderItems()) {
-                OrderItemDTO itemDTO = new OrderItemDTO();
-                itemDTO.setOrderItemId(item.getOrderItemId());
-                itemDTO.setProductId(item.getProduct().getProductId());
-                itemDTO.setProductName(item.getProduct().getProductName());
-                itemDTO.setQuantity(item.getQuantity());
-                itemDTO.setUnitPrice(item.getUnitPrice());
-                itemDTOs.add(itemDTO);
-            }
+    @Override
+    public OrderDTO getOrderByTrackingNumber(String trackingNumber) {
+        log.info("Execute getOrderByTrackingNumber() for tracking: {}", trackingNumber);
+        if (trackingNumber == null || trackingNumber.isBlank()) {
+            throw new CustomException(400, "Tracking number cannot be empty!");
         }
-        responseDTO.setItems(itemDTOs);
-
-        return responseDTO;
+        Optional<Order> optionalOrder = orderRepository.findByTrackingNumber(trackingNumber.trim());
+        if (optionalOrder.isEmpty()) {
+            throw new CustomException(404, "No order found with Tracking Number: " + trackingNumber);
+        }
+        return mapToDTO(optionalOrder.get());
     }
 
     @Override
@@ -217,31 +213,8 @@ public class OrderServiceImpl implements OrderService {
         log.info("Execute getAllOrders()");
         List<Order> orderList = orderRepository.findAllByOrderByOrderDateDesc();
         List<OrderDTO> dtoList = new ArrayList<>();
-
         for (Order order : orderList) {
-            OrderDTO responseDTO = new OrderDTO();
-            responseDTO.setOrderId(order.getOrderId());
-            responseDTO.setMemberId(order.getMember().getMemberId());
-            responseDTO.setMemberFullName(order.getMember().getMemberFullName());
-            responseDTO.setTotalAmount(order.getTotalAmount());
-            responseDTO.setOrderDate(order.getOrderDate());
-            responseDTO.setOrderStatus(order.getOrderStatus());
-            responseDTO.setPaymentStatus(order.getPaymentStatus());
-
-            List<OrderItemDTO> itemDTOs = new ArrayList<>();
-            if (order.getOrderItems() != null) {
-                for (OrderItem item : order.getOrderItems()) {
-                    OrderItemDTO itemDTO = new OrderItemDTO();
-                    itemDTO.setOrderItemId(item.getOrderItemId());
-                    itemDTO.setProductId(item.getProduct().getProductId());
-                    itemDTO.setProductName(item.getProduct().getProductName());
-                    itemDTO.setQuantity(item.getQuantity());
-                    itemDTO.setUnitPrice(item.getUnitPrice());
-                    itemDTOs.add(itemDTO);
-                }
-            }
-            responseDTO.setItems(itemDTOs);
-            dtoList.add(responseDTO);
+            dtoList.add(mapToDTO(order));
         }
         return dtoList;
     }
@@ -254,37 +227,19 @@ public class OrderServiceImpl implements OrderService {
         }
         List<Order> orderList = orderRepository.findAllByMember_MemberIdOrderByOrderDateDesc(memberId);
         List<OrderDTO> dtoList = new ArrayList<>();
-
         for (Order order : orderList) {
-            OrderDTO responseDTO = new OrderDTO();
-            responseDTO.setOrderId(order.getOrderId());
-            responseDTO.setMemberId(order.getMember().getMemberId());
-            responseDTO.setMemberFullName(order.getMember().getMemberFullName());
-            responseDTO.setTotalAmount(order.getTotalAmount());
-            responseDTO.setOrderDate(order.getOrderDate());
-            responseDTO.setOrderStatus(order.getOrderStatus());
-            responseDTO.setPaymentStatus(order.getPaymentStatus());
-
-            List<OrderItemDTO> itemDTOs = new ArrayList<>();
-            if (order.getOrderItems() != null) {
-                for (OrderItem item : order.getOrderItems()) {
-                    OrderItemDTO itemDTO = new OrderItemDTO();
-                    itemDTO.setOrderItemId(item.getOrderItemId());
-                    itemDTO.setProductId(item.getProduct().getProductId());
-                    itemDTO.setProductName(item.getProduct().getProductName());
-                    itemDTO.setQuantity(item.getQuantity());
-                    itemDTO.setUnitPrice(item.getUnitPrice());
-                    itemDTOs.add(itemDTO);
-                }
-            }
-            responseDTO.setItems(itemDTOs);
-            dtoList.add(responseDTO);
+            dtoList.add(mapToDTO(order));
         }
         return dtoList;
     }
 
     @Override
     public OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus, PaymentStatus paymentStatus) {
+        return updateOrderStatus(orderId, orderStatus, paymentStatus, null, null);
+    }
+
+    @Override
+    public OrderDTO updateOrderStatus(Long orderId, OrderStatus orderStatus, PaymentStatus paymentStatus, String courierName, String trackingNumber) {
         log.info("Execute updateOrderStatus() for orderId: {}", orderId);
         if (orderId == null) {
             throw new CustomException(400, "Order ID cannot be null!");
@@ -294,8 +249,16 @@ public class OrderServiceImpl implements OrderService {
             throw new CustomException(404, "Order not found with ID: " + orderId);
         }
         Order order = optionalOrder.get();
+        OrderStatus oldStatus = order.getOrderStatus();
+
         if (orderStatus != null) {
             order.setOrderStatus(orderStatus);
+        }
+        if (courierName != null && !courierName.isBlank()) {
+            order.setCourierName(courierName);
+        }
+        if (trackingNumber != null && !trackingNumber.isBlank()) {
+            order.setTrackingNumber(trackingNumber);
         }
         if (paymentStatus != null) {
             order.setPaymentStatus(paymentStatus);
@@ -310,30 +273,92 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
         }
+
         Order updatedOrder = orderRepository.save(order);
 
-        OrderDTO responseDTO = new OrderDTO();
-        responseDTO.setOrderId(updatedOrder.getOrderId());
-        responseDTO.setMemberId(updatedOrder.getMember().getMemberId());
-        responseDTO.setMemberFullName(updatedOrder.getMember().getMemberFullName());
-        responseDTO.setTotalAmount(updatedOrder.getTotalAmount());
-        responseDTO.setOrderDate(updatedOrder.getOrderDate());
-        responseDTO.setOrderStatus(updatedOrder.getOrderStatus());
-        responseDTO.setPaymentStatus(updatedOrder.getPaymentStatus());
+        // Send email notifications on key status updates
+        try {
+            String memberEmail = (updatedOrder.getMember() != null && updatedOrder.getMember().getUser() != null)
+                    ? updatedOrder.getMember().getUser().getEmail() : null;
+            String memberName = updatedOrder.getMember() != null ? updatedOrder.getMember().getMemberFullName() : "Valued Member";
+
+            if (memberEmail != null && !memberEmail.isBlank()) {
+                if (orderStatus == OrderStatus.SHIPPED && oldStatus != OrderStatus.SHIPPED) {
+                    emailService.sendOrderDispatchedEmail(
+                            memberEmail,
+                            memberName,
+                            updatedOrder.getOrderId(),
+                            updatedOrder.getTrackingNumber(),
+                            updatedOrder.getCourierName(),
+                            updatedOrder.getEstimatedDeliveryDate() != null ? updatedOrder.getEstimatedDeliveryDate().toString() : "2-4 Business Days"
+                    );
+                } else if ((orderStatus == OrderStatus.DELIVERED || orderStatus == OrderStatus.COMPLETED)
+                        && oldStatus != OrderStatus.DELIVERED && oldStatus != OrderStatus.COMPLETED) {
+                    if (updatedOrder.getTrackingNumber() != null && !updatedOrder.getTrackingNumber().isBlank()
+                            && updatedOrder.getCourierName() != null && !updatedOrder.getCourierName().isBlank()) {
+                        emailService.sendOrderDeliveredEmail(
+                                memberEmail,
+                                memberName,
+                                updatedOrder.getOrderId(),
+                                updatedOrder.getTrackingNumber(),
+                                updatedOrder.getCourierName()
+                        );
+                    } else {
+                        emailService.sendOrderDeliveredEmail(
+                                memberEmail,
+                                memberName,
+                                updatedOrder.getOrderId()
+                        );
+                    }
+                    log.info("Order delivered confirmation email triggered successfully for order #{}", updatedOrder.getOrderId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to send order status transition email: {}", e.getMessage());
+        }
+
+        return mapToDTO(updatedOrder);
+    }
+
+    private OrderDTO mapToDTO(Order order) {
+        OrderDTO dto = new OrderDTO();
+        dto.setOrderId(order.getOrderId());
+        dto.setMemberId(order.getMember() != null ? order.getMember().getMemberId() : null);
+        dto.setMemberFullName(order.getMember() != null ? order.getMember().getMemberFullName() : "Guest");
+        dto.setTotalAmount(order.getTotalAmount());
+        dto.setOrderDate(order.getOrderDate());
+        dto.setOrderStatus(order.getOrderStatus());
+        dto.setPaymentStatus(order.getPaymentStatus());
+        dto.setPaymentMethod(order.getPaymentMethod());
+
+        dto.setShippingAddress(order.getShippingAddress());
+        dto.setDeliveryCity(order.getDeliveryCity());
+        dto.setPostalCode(order.getPostalCode());
+        dto.setContactPhone(order.getContactPhone());
+        dto.setOrderNotes(order.getOrderNotes());
+
+        dto.setTrackingNumber(order.getTrackingNumber());
+        dto.setCourierName(order.getCourierName());
+        dto.setEstimatedDeliveryDate(order.getEstimatedDeliveryDate());
+
+        dto.setCardLast4(order.getCardLast4());
+        dto.setCardBrand(order.getCardBrand());
 
         List<OrderItemDTO> itemDTOs = new ArrayList<>();
-        if (updatedOrder.getOrderItems() != null) {
-            for (OrderItem item : updatedOrder.getOrderItems()) {
+        if (order.getOrderItems() != null) {
+            for (OrderItem item : order.getOrderItems()) {
                 OrderItemDTO itemDTO = new OrderItemDTO();
                 itemDTO.setOrderItemId(item.getOrderItemId());
-                itemDTO.setProductId(item.getProduct().getProductId());
-                itemDTO.setProductName(item.getProduct().getProductName());
+                if (item.getProduct() != null) {
+                    itemDTO.setProductId(item.getProduct().getProductId());
+                    itemDTO.setProductName(item.getProduct().getProductName());
+                }
                 itemDTO.setQuantity(item.getQuantity());
                 itemDTO.setUnitPrice(item.getUnitPrice());
                 itemDTOs.add(itemDTO);
             }
         }
-        responseDTO.setItems(itemDTOs);
-        return responseDTO;
+        dto.setItems(itemDTOs);
+        return dto;
     }
 }
